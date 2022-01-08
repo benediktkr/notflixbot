@@ -4,6 +4,11 @@
         "user_id": "@notflixbot:matrix.org",
         "device_name": "sample"
     },
+    "notflixbot": {
+        "radarr_url": "http://radarr",
+        "radarr_api_key": "abc123",
+        "themoviedb_api_key": "def456"
+    },
 
     "cmd_prefixes": {
         "!c": "cmd"

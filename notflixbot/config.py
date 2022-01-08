@@ -82,6 +82,7 @@ class Config(object):
         self.rooms = self._get_cfg(
             ["matrix", "rooms"], default=list())
 
+        self.notflixbot = self._get_cfg(["notflixbot"], default=dict())
         self.autotrust = self._get_cfg(["autotrust"], default=False)
         self.cmd_prefixes = self._get_cfg(["cmd_prefixes"], required=True)
         self.credentials_path = self._get_cfg(["credentials_path"])

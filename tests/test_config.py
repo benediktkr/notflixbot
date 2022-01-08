@@ -16,7 +16,8 @@ def test_config_file_sample_json():
     assert "autotrust" in conf
     assert "credentials_path" in conf
     assert "storage_path" in conf
-    assert len(conf.keys()) == 6
+    assert "notflixbot" in conf
+    assert len(conf.keys()) == 7
 
     # matrix section
     assert conf['matrix']['homeserver'] == "https://matrix.org"
@@ -55,6 +56,7 @@ def test_config_parser():
     assert conf.log['logfile'] == "notflixbot.log"
     assert conf.log['json'] is True
     assert conf.log['stderr'] is True
+    assert isinstance(conf.notflixbot, dict)
 
 
 def test_config_parser_homeserver():

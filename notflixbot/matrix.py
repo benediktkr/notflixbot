@@ -178,7 +178,7 @@ class MatrixClient:
             return await self._trust_user_devices(u.user_id)
 
     async def _trust_user_devices(self, user_id):
-        if user_id != self.config.user_id:
+        if user_id != self.config.user_id and self.config.autotrust:
             for dev_id, olm_device in self.nio.device_store[user_id].items():
                 if olm_device.trust_state != TrustState.verified:
                     self.nio.verify_device(olm_device)
@@ -255,16 +255,22 @@ class MatrixClient:
 
         if prefix in self.config.cmd_prefixes:
             cmd = self.config.cmd_prefixes[prefix]
-            response = await self._cmd_respond(user_id, cmd, cmdmsg)
+            response = await self._cmd_respond(user_id, cmd, cmdmsg, room_id)
             await self.send_msg(room_id, response)
 
-        elif event.body == "are you alive?":
-            response = "no im a `robot`"
-            await self.send_msg(room_id, response)
+        else:
+            response = await self._phrase_respond(user_id, event.body, room_id)
+            if response is not None:
+                await self.send_msg(room_id, response)
 
+    async def _phrase_respond(self, user_id, msg, room_id):
+        if msg == "are you alive?":
+            return "no im a `robot`"
+        else:
+            return None
 
-    async def _cmd_respond(self, sender, cmd, msg):
-        return f"from: `{sender}`, cmd: `{cmd}`, msg: `{msg}`"
+    async def _cmd_respond(self, user_id, cmd, msg, room_id):
+        return f"user_id: `{user_id}`, cmd: `{cmd}`, msg: `{msg}`"
 
     async def send_msg(self, room, msg):
         # msgtypes:
