@@ -138,3 +138,12 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+# notflixbot
+credentials-old.json
+credentials.json
+config.json
+notflixbot.json
+notflixbot.log
+nio_store/
+**/*-old.py
+**/*-old

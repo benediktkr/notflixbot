@@ -1,0 +1,23 @@
+{
+    "matrix": {
+        "homeserver": "https://matrix.org",
+        "user_id": "@notflixbot:matrix.org",
+        "device_name": "sample"
+    },
+
+    "cmd_prefixes": {
+        "!c": "cmd"
+    },
+
+    "autotrust": false,
+
+    "credentials_path": "credentials-sample.json",
+    "storage_path": "/var/lib/notflixbot/store",
+
+    "log": {
+        "level": "INFO",
+        "logfile": "notflixbot.log",
+        "json": true,
+        "stderr": true
+    }
+}
