@@ -1,5 +1,6 @@
 # notflixbot
 
+*IDEA:* add commands to run key syncs 
 
 ## libolm
 
