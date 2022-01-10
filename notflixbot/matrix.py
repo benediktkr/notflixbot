@@ -8,6 +8,7 @@ from markdown import markdown
 from nio import AsyncClient, AsyncClientConfig, InviteMemberEvent, MatrixRoom
 from nio import RoomMessageText, SyncResponse, ProfileSetAvatarError
 from nio import LoginError, JoinError
+from nio.responses import WhoamiError
 from nio.crypto import TrustState
 
 from notflixbot.errors import NotflixbotError, MatrixError
@@ -19,7 +20,7 @@ class MatrixClient:
     def run_async(cls, config, args):
         async def _run_aclient(config, args):
             try:
-                m = await cls.init(config, args)
+                m = await cls._init(config, args)
 
                 if args.restore_login:
                     return await m.restore_login()
@@ -42,7 +43,7 @@ class MatrixClient:
             raise SystemExit(1)
 
     @classmethod
-    async def init(cls, config, args):
+    async def _init(cls, config, args):
         _m = cls()
         _m.config = config
         _m.homeserver = config.homeserver
@@ -117,15 +118,17 @@ class MatrixClient:
         )
         self.nio.load_store()
 
+        whoami = await self.nio.whoami()
+        if isinstance(whoami, WhoamiError):
+            # whoami.status_code ("M_UNKNOWN_TOKEN")
+            # whoami.message ("Invalid macaroon passed.")
+            raise MatrixError(whoami)
+
     async def _avatar(self):
         avatar = await self.nio.set_avatar(self.config.avatar)
 
         if isinstance(avatar, ProfileSetAvatarError):
-            if avatar.status_code == "M_UNKNOWN_TOKEN":
-                raise MatrixError(
-                    f"failed to log in: {avatar.status_code} {avatar.message}")
-            else:
-                logger.warning(f"error setting avatar: {avatar}")
+            logger.warning(f"error setting avatar: {avatar}")
         else:
             logger.debug("set avatar")
 
