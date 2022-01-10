@@ -13,16 +13,20 @@ def test_config_file_sample_json():
     assert "matrix" in conf
     assert "log" in conf
     assert "cmd_prefixes" in conf
+    assert "admin_user_ids" in conf
     assert "autotrust" in conf
     assert "credentials_path" in conf
     assert "storage_path" in conf
     assert "notflixbot" in conf
-    assert len(conf.keys()) == 7
+    assert len(conf.keys()) == 8
 
     # matrix section
     assert conf['matrix']['homeserver'] == "https://matrix.org"
     assert conf['matrix']['user_id'] == "@notflixbot:matrix.org"
     assert len(conf['matrix']) == 3
+
+    # admin_user_ids section
+    assert "@admin:matrix.org" in conf['admin_user_ids']
 
     # log section
     assert conf['log']['level'] in ["DEBUG", "INFO", "WARN", "ERROR"]
@@ -30,8 +34,8 @@ def test_config_file_sample_json():
     assert isinstance(conf['log']['json'], bool)
     assert len(conf['log']) == 4
 
-    assert conf['cmd_prefixes']["!c"] == "cmd"
-    assert len(conf['cmd_prefixes']) == 2
+    assert conf['cmd_prefixes']["%ruok"] == "ruok"
+    assert len(conf['cmd_prefixes']) == 3
     assert conf['autotrust'] == False
     assert conf['credentials_path'] == "credentials-sample.json"
     assert conf['storage_path'] == "/var/lib/notflixbot/store"
@@ -47,8 +51,11 @@ def test_config_parser():
     assert conf.user_id == "@notflixbot:matrix.org"
     assert conf.device_name == "sample"
     assert conf.avatar is None
-    assert conf.cmd_prefixes["!c"] == "cmd"
-    assert len(conf.cmd_prefixes) == 2
+    assert conf.cmd_prefixes["%ruok"] == "ruok"
+    assert isinstance(conf.cmd_prefixes, dict)
+    assert len(conf.cmd_prefixes.keys()) == 3
+    assert isinstance(conf.admin_user_ids, list)
+    assert len(conf.admin_user_ids) == 1
     assert conf.autotrust is False
     assert conf.credentials_path == "credentials-sample.json"
     assert conf.storage_path == "/var/lib/notflixbot/store"
