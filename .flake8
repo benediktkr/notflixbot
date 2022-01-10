@@ -3,4 +3,4 @@
 # W503 line break before binary operator
 # W504 line break after binary operator
 #ignore = E501,W503,W504
-exclude = tests
+exclude = tests,bullit.py

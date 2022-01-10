@@ -144,6 +144,7 @@ credentials.json
 config.json
 notflixbot.json
 notflixbot.log
+bullit.py
 nio_store/
 **/*-old.py
 **/*-old

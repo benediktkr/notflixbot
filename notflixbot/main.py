@@ -26,7 +26,7 @@ def get_args():
     return get_parser().parse_args()
 
 
-# @logger.catch
+@logger.catch
 def main():
     try:
         args = get_args()

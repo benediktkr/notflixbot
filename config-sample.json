@@ -11,7 +11,8 @@
     },
 
     "cmd_prefixes": {
-        "!c": "cmd"
+        "!c": "cmd",
+        "%key_sync": "key_sync"
     },
 
     "autotrust": false,

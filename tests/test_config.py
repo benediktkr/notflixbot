@@ -31,7 +31,7 @@ def test_config_file_sample_json():
     assert len(conf['log']) == 4
 
     assert conf['cmd_prefixes']["!c"] == "cmd"
-    assert len(conf['cmd_prefixes']) == 1
+    assert len(conf['cmd_prefixes']) == 2
     assert conf['autotrust'] == False
     assert conf['credentials_path'] == "credentials-sample.json"
     assert conf['storage_path'] == "/var/lib/notflixbot/store"
@@ -48,7 +48,7 @@ def test_config_parser():
     assert conf.device_name == "sample"
     assert conf.avatar is None
     assert conf.cmd_prefixes["!c"] == "cmd"
-    assert len(conf.cmd_prefixes) == 1
+    assert len(conf.cmd_prefixes) == 2
     assert conf.autotrust is False
     assert conf.credentials_path == "credentials-sample.json"
     assert conf.storage_path == "/var/lib/notflixbot/store"

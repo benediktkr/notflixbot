@@ -73,7 +73,7 @@ class MatrixClient:
         logger.debug(f"connecting to '{self.config.homeserver}'")
         self._callbacks()
         await self._set_creds()
-        await self._wrangle_keys()
+        await self._key_sync()
         if self.config.avatar:
             await self._avatar()
 
@@ -135,7 +135,7 @@ class MatrixClient:
         self.nio.add_event_callback(self._cb_message, (RoomMessageText,))
         self.nio.add_response_callback(self._cb_sync, SyncResponse)
 
-    async def _wrangle_keys(self):
+    async def _key_sync(self, room=None, event=None):
         if self.nio.should_upload_keys:
             resp_upload = await self.nio.keys_upload()
             logger.info(f"uploaded keys: {resp_upload}")
@@ -150,6 +150,9 @@ class MatrixClient:
             for user in self.nio.get_users_for_key_claiming():
                 resp_claim = await self.nio.keys_claim(user) # noqa
                 logger.warning("claimed keys for: '{user}'")
+
+        if room is not None and event is not None:
+            await self.send_msg(room.room_id, "key sync: `ok`")
 
     async def _login(self, passwd):
         try:
@@ -250,27 +253,33 @@ class MatrixClient:
         logger.debug(f"room: {room_id}, user_id: {user_id}, msg: '{msg}'")
 
         # "".split(" ")[0] -> ""
-        cmdmsg = event.body.split(' ')
-        prefix = cmdmsg[0]
+        cmd = event.body.strip().split(' ')
+        prefix = cmd[0]
 
-        if prefix in self.config.cmd_prefixes:
-            cmd = self.config.cmd_prefixes[prefix]
-            response = await self._cmd_respond(user_id, cmd, cmdmsg, room_id)
-            await self.send_msg(room_id, response)
+        handler_name = self.config.cmd_prefixes.get(prefix, None)
+        if handler_name == "key_sync":
+            await self._key_sync(room, event)
+        elif handler_name is not None:
+            await self._cmd_respond(room, event, handler_name)
 
         else:
-            response = await self._phrase_respond(user_id, event.body, room_id)
-            if response is not None:
-                await self.send_msg(room_id, response)
+            await self._phrase_respond(room, event)
 
-    async def _phrase_respond(self, user_id, msg, room_id):
-        if msg == "are you alive?":
-            return "no im a `robot`"
-        else:
-            return None
+    async def _phrase_respond(self, room, event):
+        phrases = {
+            'are you alive?': 'no im a `robot`'
+        }
+        msg = event.body.strip()
+        response = phrases.get(msg, None)
+        if response is not None:
+            await self.send_msg(room.room_id, response)
 
-    async def _cmd_respond(self, user_id, cmd, msg, room_id):
-        return f"user_id: `{user_id}`, cmd: `{cmd}`, msg: `{msg}`"
+    async def _cmd_respond(self, room, event, handler_name):
+        h = handler_name
+        user_id = event.sender
+        msg = event.body
+        response = f"user_id: `{user_id}`, handler_name: {h}, msg: `{msg}`"
+        await self.send_msg(room.room_id, response)
 
     async def send_msg(self, room, msg):
         # msgtypes:
