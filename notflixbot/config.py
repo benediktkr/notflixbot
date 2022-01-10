@@ -85,6 +85,7 @@ class Config(object):
         self.notflixbot = self._get_cfg(["notflixbot"], default=dict())
         self.autotrust = self._get_cfg(["autotrust"], default=False)
         self.cmd_prefixes = self._get_cfg(["cmd_prefixes"], required=True)
+        self.admin_cmds = self._get_cfg(["admin_cmds"], default=list())
         self.admin_user_ids = self._get_cfg(['admin_user_ids'], default=list())
         self.credentials_path = self._get_cfg(["credentials_path"])
         try:

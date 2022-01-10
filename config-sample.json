@@ -15,6 +15,9 @@
         "%whoami": "whoami",
         "%key_sync": "key_sync"
     },
+    "admin_cmds": [
+        "%ruok"
+    ],
     "admin_user_ids": [
         "@admin:example.com"
     ],

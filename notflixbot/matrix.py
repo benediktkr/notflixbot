@@ -275,8 +275,13 @@ class MatrixClient:
 
         handler_name = self.config.cmd_prefixes.get(prefix, None)
         if handler_name is not None:
-            handler_func = self.cmd_handlers[handler_name]
-            await handler_func(room, event)
+            admin_cmd = prefix in self.config.admin_cmds
+            is_admin = user_id in self.config.admin_user_ids
+            if admin_cmd and not is_admin:
+                logger.warning(f"ignorning admin command '{msg}' from '{user_id}'")
+            else:
+                handler_func = self.cmd_handlers[handler_name]
+                await handler_func(room, event)
         else:
             await self._phrase_respond(room, event)
 
