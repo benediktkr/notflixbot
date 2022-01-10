@@ -50,6 +50,7 @@ class MatrixClient:
         _m.user_id = config.user_id
         _m.args = args
         _m.nio = AsyncClient(_m.homeserver, _m.user_id)
+        _m.cmd_handlers = dict()
         return _m
 
     async def close(self):
@@ -73,6 +74,7 @@ class MatrixClient:
 
         logger.debug(f"connecting to '{self.config.homeserver}'")
         self._callbacks()
+        self._cmd_handlers()
         await self._set_creds()
         await self._key_sync()
         if self.config.avatar:
@@ -131,6 +133,11 @@ class MatrixClient:
             logger.warning(f"error setting avatar: {avatar}")
         else:
             logger.debug("set avatar")
+
+    def _cmd_handlers(self):
+        self.cmd_handlers['ruok'] = self._handle_ruok
+        self.cmd_handlers['whoami'] = self._handle_whoami
+        self.cmd_handlers['key_sync'] = self._key_sync
 
     def _callbacks(self):
         self.nio.add_event_callback(
@@ -267,11 +274,9 @@ class MatrixClient:
         prefix = cmd[0]
 
         handler_name = self.config.cmd_prefixes.get(prefix, None)
-        if handler_name == "key_sync":
-            await self._key_sync(room, event)
-        elif handler_name is not None:
-            await self._cmd_respond(room, event, handler_name)
-
+        if handler_name is not None:
+            handler_func = self.cmd_handlers[handler_name]
+            await handler_func(room, event)
         else:
             await self._phrase_respond(room, event)
 
@@ -284,12 +289,14 @@ class MatrixClient:
         if response is not None:
             await self.send_msg(room.room_id, response)
 
-    async def _cmd_respond(self, room, event, handler_name):
-        h = handler_name
-        user_id = event.sender
-        msg = event.body
-        response = f"user_id: `{user_id}`, handler_name: {h}, msg: `{msg}`"
-        await self.send_msg(room.room_id, response)
+    async def _handle_whoami(self, room, event):
+        your_id = event.sender
+        my_id = self.config.creds.user_id
+        await self.send_msg(
+            room.room_id, f"i am: `{my_id}` and you are: `{your_id}`")
+
+    async def _handle_ruok(self, room, event):
+        await self.send_msg(room.room_id, "`iamok`")
 
     async def send_msg(self, room, msg):
         # msgtypes:
@@ -297,8 +304,9 @@ class MatrixClient:
         #  * m.text: normal?
         #  * m.room.message: no markdown
 
+        room_id = await self._room_id(room)
         await self.nio.room_send(
-            await self._room_id(room),
+            room_id,
             message_type="m.room.message",
             content={
                 'msgtype': 'm.notice',
@@ -308,3 +316,5 @@ class MatrixClient:
             },
             ignore_unverified_devices=False
         )
+
+        logger.debug(f"sent '{msg}' to '{room_id}'")

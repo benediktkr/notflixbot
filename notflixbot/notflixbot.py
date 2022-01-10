@@ -72,7 +72,11 @@ class TheMovieDB:
 
 
 class NotflixMatrixClient(MatrixClient):
-    async def _cmd_respond(self, room, event, handler_name):
+    def _cmd_handlers(self):
+        super()._cmd_handlers()
+        self.cmd_handlers['add'] = self._handle_add
+
+    async def _handle_add(self, room, event):
         try:
             cmd = event.body.strip().split(' ')
             url = cmd[1].strip()

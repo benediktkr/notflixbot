@@ -11,7 +11,8 @@
     },
 
     "cmd_prefixes": {
-        "!c": "cmd",
+        "%ruok": "ruok",
+        "%whoami": "whoami",
         "%key_sync": "key_sync"
     },
 
