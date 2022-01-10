@@ -139,17 +139,24 @@ class MatrixClient:
         if self.nio.should_upload_keys:
             resp_upload = await self.nio.keys_upload()
             logger.info(f"uploaded keys: {resp_upload}")
+            if room is not None:
+                await self.send_msg(room.room_id, resp_upload)
 
         if self.nio.should_query_keys:
             logger.warning(
                 f"should query keys for: {self.nio.users_for_key_query}")
             resp_query = await self.nio.keys_query()
             logger.info(f"queried for keys: {resp_query}")
+            if room is not None:
+                await self.send_msg(room.room_id, resp_query)
 
         if self.nio.should_claim_keys:
-            for user in self.nio.get_users_for_key_claiming():
-                resp_claim = await self.nio.keys_claim(user) # noqa
-                logger.warning("claimed keys for: '{user}'")
+            # for user in self.nio.get_users_for_key_claiming():
+            # resp_claim = await self.nio.keys_claim(user) # noqa
+            resp_claim = await self.nio.keys_claim()
+            logger.warning("claimed keys: '{resp_claim}'")
+            if room is not None:
+                await self.send_msg(room.room_id, resp_claim)
 
         if room is not None and event is not None:
             await self.send_msg(room.room_id, "key sync: `ok`")
