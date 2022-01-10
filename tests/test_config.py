@@ -21,12 +21,12 @@ def test_config_file_sample_json():
     assert len(conf.keys()) == 8
 
     # matrix section
-    assert conf['matrix']['homeserver'] == "https://matrix.org"
-    assert conf['matrix']['user_id'] == "@notflixbot:matrix.org"
+    assert conf['matrix']['homeserver'] == "https://example.com"
+    assert conf['matrix']['user_id'] == "@notflixbot:example.com"
     assert len(conf['matrix']) == 3
 
     # admin_user_ids section
-    assert "@admin:matrix.org" in conf['admin_user_ids']
+    assert "@admin:example.com" in conf['admin_user_ids']
 
     # log section
     assert conf['log']['level'] in ["DEBUG", "INFO", "WARN", "ERROR"]
@@ -47,8 +47,8 @@ def test_config_missing_level():
 def test_config_parser():
     conf = config.Config.read('config-sample.json')
     assert conf._config_path == "config-sample.json"
-    assert conf.homeserver == "https://matrix.org"
-    assert conf.user_id == "@notflixbot:matrix.org"
+    assert conf.homeserver == "https://example.com"
+    assert conf.user_id == "@notflixbot:example.com"
     assert conf.device_name == "sample"
     assert conf.avatar is None
     assert conf.cmd_prefixes["%ruok"] == "ruok"
@@ -98,9 +98,9 @@ def test_config_parser_missing_non_required():
 def test_avatar():
     j = read_json_file("config-sample.json")
     # not real mxc uri
-    j['matrix']['avatar'] = "mxc://matrix.org/foobar"
+    j['matrix']['avatar'] = "mxc://example.com/foobar"
     conf = config.Config(j, 'config-test.json')
-    assert conf.avatar == "mxc://matrix.org/foobar"
+    assert conf.avatar == "mxc://example.com/foobar"
 
 def test_config_parser_missing_wihout_default():
     j = read_json_file("config-sample.json")

@@ -1,7 +1,7 @@
 {
     "matrix": {
-        "homeserver": "https://matrix.org",
-        "user_id": "@notflixbot:matrix.org",
+        "homeserver": "https://example.com",
+        "user_id": "@notflixbot:example.com",
         "device_name": "sample"
     },
     "notflixbot": {
@@ -16,7 +16,7 @@
         "%key_sync": "key_sync"
     },
     "admin_user_ids": [
-        "@admin:matrix.org"
+        "@admin:example.com"
     ],
 
     "autotrust": false,
