@@ -11,19 +11,24 @@ def read_json_file(path):
 def test_config_file_sample_json():
     conf = read_json_file('config-sample.json')
     assert "matrix" in conf
+    assert "webhook" in conf
     assert "log" in conf
     assert "cmd_prefixes" in conf
+    assert "admin_cmds" in conf
     assert "admin_user_ids" in conf
     assert "autotrust" in conf
     assert "credentials_path" in conf
     assert "storage_path" in conf
     assert "notflixbot" in conf
-    assert len(conf.keys()) == 8
+    assert len(conf.keys()) == 10
 
     # matrix section
     assert conf['matrix']['homeserver'] == "https://example.com"
     assert conf['matrix']['user_id'] == "@notflixbot:example.com"
     assert len(conf['matrix']) == 3
+
+    # webhook section
+    assert len(conf['webhook']['tokens']) > 0
 
     # admin_user_ids section
     assert "@admin:example.com" in conf['admin_user_ids']
@@ -51,11 +56,18 @@ def test_config_parser():
     assert conf.user_id == "@notflixbot:example.com"
     assert conf.device_name == "sample"
     assert conf.avatar is None
+    assert isinstance(conf.webhook_tokens, dict)
+    assert len(conf.webhook_tokens.keys()) > 0
     assert conf.cmd_prefixes["%ruok"] == "ruok"
     assert isinstance(conf.cmd_prefixes, dict)
     assert len(conf.cmd_prefixes.keys()) == 3
+    assert "%ruok" in conf.cmd_prefixes
+    assert isinstance(conf.admin_cmds, list)
+    assert len(conf.admin_cmds) == 1
+    assert "%ruok" in conf.admin_cmds
     assert isinstance(conf.admin_user_ids, list)
     assert len(conf.admin_user_ids) == 1
+    assert "@admin:example.com" in conf.admin_user_ids
     assert conf.autotrust is False
     assert conf.credentials_path == "credentials-sample.json"
     assert conf.storage_path == "/var/lib/notflixbot/store"

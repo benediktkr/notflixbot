@@ -8,10 +8,11 @@ authors = ["Benedikt Kristinsson <benedikt@lokun.is>"]
 python = "^3.9"
 matrix-nio = {extras = ["e2e"], version = "^0.18.7"}
 loguru = "^0.5.3"
-requests = "^2.27.1"
 click = "^8.0.3"
 Markdown = "^3.3.6"
 aiohttp = "^3.8.1"
+zmq = "^0.0.0"
+requests = "^2.27.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

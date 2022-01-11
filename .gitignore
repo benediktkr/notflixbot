@@ -140,11 +140,16 @@ cython_debug/
 
 # notflixbot
 credentials-old.json
+credentials-neo.json
+credentials-*.json
 credentials.json
 config.json
 notflixbot.json
+neo.json
 notflixbot.log
 bullit.py
 nio_store/
+neo_store/
+*_store/
 **/*-old.py
 **/*-old

@@ -82,6 +82,10 @@ class Config(object):
         self.rooms = self._get_cfg(
             ["matrix", "rooms"], default=list())
 
+        self.webhook_port = self._get_cfg(["webhook", "port"], default=3000)
+        self.webhook_tokens = self._get_cfg(
+            ["webhook", "tokens"], default=dict())
+
         self.notflixbot = self._get_cfg(["notflixbot"], default=dict())
         self.autotrust = self._get_cfg(["autotrust"], default=False)
         self.cmd_prefixes = self._get_cfg(["cmd_prefixes"], required=True)

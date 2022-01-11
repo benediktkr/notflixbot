@@ -4,23 +4,10 @@ from urllib.parse import urljoin
 import requests
 from loguru import logger
 
-from notflixbot.errors import ImdbError, TvdbError
-from notflixbot.matrix import MatrixClient
+from notflixbot.errors import ImdbError, TvdbError, NotflixbotError
 
 API_BASE_URL = "https://api.themoviedb.org/3/"
 POSTER_BASE_URL = "https://www.themoviedb.org/t/p/w1280"
-
-
-def get_imdb_id_from_url(url):
-    parsed_url = urlparse(url)
-    if parsed_url.netloc.endswith("imdb.com"):
-        path_parts = parsed_url.path.split('/')
-        if path_parts[1] != "title":
-            logger.warning(f"weird url? {url}")
-        imdb_id = path_parts[2]
-        return imdb_id
-    else:
-        raise ImdbError("not an imdb url")
 
 
 class TheMovieDB:
@@ -71,42 +58,33 @@ class TheMovieDB:
             return None
 
 
-class NotflixMatrixClient(MatrixClient):
-    def _cmd_handlers(self):
-        super()._cmd_handlers()
-        self.cmd_handlers['add'] = self._handle_add
+class Notflix:
 
-    async def _handle_add(self, room, event):
+    def __init__(self, config_dict):
+        self.config_dict = config_dict
+        self.tvdb = TheMovieDB(config_dict['themoviedb_api_key'])
+
+    def get_imdb_id_from_url(self, url):
+        parsed_url = urlparse(url)
+        if parsed_url.netloc.endswith("imdb.com"):
+            path_parts = parsed_url.path.split('/')
+            if path_parts[1] != "title":
+                logger.warning(f"weird url? {url}")
+            imdb_id = path_parts[2]
+            return imdb_id
+        else:
+            raise ImdbError("not an imdb url")
+
+    def add_from_imdb_url(self, imdb_url):
         try:
-            cmd = event.body.strip().split(' ')
-            url = cmd[1].strip()
-            imdb_id = get_imdb_id_from_url(url)
-            tvdbapi = TheMovieDB(self.config.notflixbot['themoviedb_api_key'])
-            info = tvdbapi.search_imdb_id(imdb_id)
+            imdb_id = self.get_imdb_id_from_url(imdb_url)
+            info = self.tvdb.search_imdb_id(imdb_id)
 
-            # await self.nio.room_send(
-            #     room_id,
-            #     message_type="m.room.message",
-            #     content={
-            #         "body": info['title'],
-            #         "msgtype": "m.image",
-            #         "url": info["poster"],
-            #         "info": {
-            #             "mimetype": "image/jpeg",
-            #             "w": 100,
-            #             "h": 100
-            #         }
-
-            #     },
-            #     ignore_unverified_devices=False
-            # )
-            resp = f"{info['title']} ({info['release_year']}) | [poster]({info['poster']})" # noqa
-            await self.send_msg(room.room_id, resp)
-
-        except IndexError:
-            err = f"invalid command: '{cmd}'"
-            logger.error(err)
-            await self.send_msg(room.room_id, err)
-
+            msg = f"{info['title']} ({info['release_year']})"
+            msg += " | [poster]({info['poster']})"
+            return {
+                'msg': msg,
+                'info': info
+            }
         except (ImdbError, TvdbError, NotImplementedError) as e:
-            await self.send_msg(room.room_id, f"error: {str(e)}")
+            raise NotflixbotError(e) from e

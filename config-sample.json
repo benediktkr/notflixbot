@@ -4,6 +4,11 @@
         "user_id": "@notflixbot:example.com",
         "device_name": "sample"
     },
+    "webhook": {
+        "tokens": {
+            "123abc": "#room:example.com"
+        }
+    },
     "notflixbot": {
         "radarr_url": "http://radarr",
         "radarr_api_key": "abc123",
