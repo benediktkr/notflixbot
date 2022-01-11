@@ -25,7 +25,6 @@ class Radarr:
             'addOptions': {'searchForMovie': True}
 
         }, indent=2)
-        print(data)
         """
         {
   "title": "Zola",
@@ -95,7 +94,10 @@ class Radarr:
             headers={'Content-Type': 'application/json'}
         )
         j = r.json()
+        logger.info(f"radarr responded: {r.status_code}")
         print(json.dumps(j, indent=2))
+        return (r.status_code, j)
+
 
 
 
@@ -176,8 +178,9 @@ class Notflix:
         try:
             imdb_id = self.get_imdb_id_from_url(imdb_url)
             item = self.tvdb.search_imdb_id(imdb_id)
-            self.radarr.add(item)
-            return item
+            status, response = self.radarr.add(item)
+            added = status == 201
+            return (added, item)
 
             # msg = f"{item['title']} ({item['release_year']})"
             # msg += " | [poster]({item['poster']})"

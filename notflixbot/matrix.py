@@ -328,8 +328,12 @@ class MatrixClient:
         try:
             msg = event.body.strip().split(' ')
             url = msg[1].strip()
-            result = self.notflix.add_from_imdb_url(url)
-            return result
+            added, item = self.notflix.add_from_imdb_url(url)
+            if added:
+                await self.send_msg(
+                    room.room_id,
+                    f"added: {item['title']} ({item['release_year']})")
+            return item
         except IndexError:
             logger.error(f"invalid msg from {event.sender}: '{event.body}'")
             self.send_msg(room.room_id, "url is missing")
