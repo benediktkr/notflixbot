@@ -90,7 +90,7 @@ class Webhook:
         if 'text' in w_data:
             msg = w_data['text']
         else:
-            j = json.dumps(w_data, indent=2))
+            j = json.dumps(w_data, indent=2)
             msg = "\n".join(["```", j, "```"])
 
         m_data = json.dumps({
