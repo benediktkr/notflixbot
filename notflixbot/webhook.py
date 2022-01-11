@@ -86,9 +86,16 @@ class Webhook:
         return json_response("ok")
 
     async def _send(self, request, w_data, room):
+
+        if 'text' in w_data:
+            msg = w_data['text']
+        else:
+            j = json.dumps(w_data, indent=2))
+            msg = "\n".join(["```", j, "```"])
+
         m_data = json.dumps({
             'room': room,
-            'msg': w_data['text']
+            'msg': msg
         })
         await self._socket.send_string(m_data)
 
