@@ -54,29 +54,43 @@ class Webhook:
     def _setup_routes(self):
         self._app.add_routes([
             # not an f-string, parameterized input in aiohttp
-            post("/_webhook/{token}", self._handle_webhook),
+            post("/_webhook", self._handle_webhook_json_token),
+            post("/_webhook/", self._handle_webhook_json_token),
+            post("/_webhook/{token}", self._handle_webhook_url_token),
             get("/_webhook/ruok", self._handle_ruok),
         ])
+
+    def _validate_token(self, token):
+        try:
+            # dict lookup is o(1) so no timing attacks from string comapares
+            # otherwise: hmac.secure_compare
+            return self.tokens[token]
+        except KeyError:
+            raise HTTPForbidden
 
     async def _handle_ruok(self, request):
         return json_response({'ruok': 'iamok'})
 
-    async def _handle_webhook(self, request):
-        token = request.match_info.get('token', None)
-        try:
-            # dict lookup is o(1) so no timing attacks from string comapares
-            room = self.tokens[token]
-        except KeyError:
-            raise HTTPForbidden
-
+    async def _handle_webhook_json_token(self, request):
         w_data = await request.json()
+        token = w_data['token']
+        room = self._validate_token(token)
+        await self._send(request, w_data, room)
+        return json_response("ok")
+
+    async def _handle_webhook_url_token(self, request):
+        token = request.match_info.get('token', None)
+        room = self._validate_token(token)
+        w_data = await request.json()
+        await self._send(request, w_data, room)
+        return json_response("ok")
+
+    async def _send(self, request, w_data, room):
         m_data = json.dumps({
             'room': room,
             'msg': w_data['text']
         })
-
         await self._socket.send_string(m_data)
-        return json_response("ok")
 
     async def serve(self):
         runner = AppRunner(self._app)

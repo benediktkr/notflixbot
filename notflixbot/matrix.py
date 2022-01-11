@@ -14,8 +14,8 @@ from nio.responses import WhoamiError
 from nio.crypto import TrustState
 import zmq.asyncio
 
-from notflixbot.notflixbot import Notflix
-from notflixbot.errors import NotflixbotError, MatrixError
+from notflixbot.notflix import Notflix
+from notflixbot.errors import NotflixbotError, MatrixError, ImdbError
 
 
 class MatrixClient:
@@ -51,6 +51,12 @@ class MatrixClient:
         self._cmd_handlers()
 
         self.notflix = Notflix(config.notflixbot)
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
 
     async def close(self):
         await self.nio.close()
@@ -323,11 +329,12 @@ class MatrixClient:
             msg = event.body.strip().split(' ')
             url = msg[1].strip()
             result = self.notflix.add_from_imdb_url(url)
-            if 'msg' in result:
-                await self.send_msg(room.room_id, result['msg'])
+            return result
         except IndexError:
             logger.error(f"invalid msg from {event.sender}: '{event.body}'")
             self.send_msg(room.room_id, "url is missing")
+        except ImdbError as e:
+            logger.warning(e)
 
     async def send_msg(self, room, msg):
         # msgtypes:
