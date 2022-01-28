@@ -8,6 +8,7 @@ from loguru import logger
 
 from notflixbot.errors import ImdbError, TvdbError, NotflixbotError
 
+
 class Radarr:
     def __init__(self, base_url, api_key):
         self._api_key = api_key
@@ -18,75 +19,13 @@ class Radarr:
             'imdbId': item['imdb_id'],
             'TmdbId': item['tmdb_id'],
             'Title': item['title'],
-            'QualityProfileId': 4, # HD 1080
+            'QualityProfileId': 4,   # HD 1080
             # 'Path': self.path,
-            'RootFolderPath': f"/deadspace/video/movies",
+            'RootFolderPath': "/deadspace/video/movies",
             'monitored': True,
             'addOptions': {'searchForMovie': True}
 
         }, indent=2)
-        """
-        {
-  "title": "Zola",
-  "originalTitle": "Zola",
-  "alternateTitles": [],
-  "secondaryYear": 2020,
-  "secondaryYearSourceId": 0,
-  "sortTitle": "zola",
-  "sizeOnDisk": 0,
-  "status": "released",
-  "overview": "A waitress agrees to accompany an exotic dancer, her put-upon boyfriend, and her mysterious and domineering roommate on a road trip to Florida to seek their fortune at a high-end strip club.",
-  "inCinemas": "2021-06-30T00:00:00Z",
-  "physicalRelease": "2021-09-14T00:00:00Z",
-  "digitalRelease": "2021-07-21T00:00:00Z",
-  "images": [
-    {
-      "coverType": "poster",
-      "url": "/radarr/MediaCover/147/poster.jpg",
-      "remoteUrl": "https://image.tmdb.org/t/p/original/bJLCPROp9bmNndurwZpVnOioVpB.jpg"
-    },
-    {
-      "coverType": "fanart",
-      "url": "/radarr/MediaCover/147/fanart.jpg",
-      "remoteUrl": "https://image.tmdb.org/t/p/original/pc471CQr2IzdnfiJTspjtW4ktRC.jpg"
-    }
-  ],
-  "website": "https://a24films.com/films/zola",
-  "year": 2021,
-  "hasFile": false,
-  "youTubeTrailerId": "jrQFYJPkp_U",
-  "studio": "Killer Films",
-  "path": "/deadspace/video/movies/Zola (2021)",
-  "qualityProfileId": 4,
-  "monitored": true,
-  "minimumAvailability": "tba",
-  "isAvailable": true,
-  "folderName": "/deadspace/video/movies/Zola (2021)",
-  "runtime": 86,
-  "cleanTitle": "zola",
-  "imdbId": "tt5439812",
-  "tmdbId": 539565,
-  "titleSlug": "539565",
-  "certification": "R",
-  "genres": [
-    "Comedy",
-    "Crime"
-  ],
-  "tags": [],
-  "added": "2022-01-11T09:02:51Z",
-  "addOptions": {
-    "searchForMovie": true,
-    "ignoreEpisodesWithFiles": false,
-    "ignoreEpisodesWithoutFiles": false
-  },
-  "ratings": {
-    "votes": 76,
-    "value": 6.3
-  },
-  "id": 147
-}
-        """
-
         r = requests.post(
             f"{self._base_url}/movie",
             data=data,
@@ -95,10 +34,7 @@ class Radarr:
         )
         j = r.json()
         logger.info(f"radarr responded: {r.status_code}")
-        print(json.dumps(j, indent=2))
         return (r.status_code, j)
-
-
 
 
 class TheMovieDB:

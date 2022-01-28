@@ -13,37 +13,34 @@ def test_config_file_sample_json():
     assert "matrix" in conf
     assert "webhook" in conf
     assert "log" in conf
-    assert "cmd_prefixes" in conf
-    assert "admin_cmds" in conf
-    assert "admin_user_ids" in conf
+    assert "admin_rooms" in conf
     assert "autotrust" in conf
     assert "credentials_path" in conf
     assert "storage_path" in conf
     assert "notflixbot" in conf
-    assert len(conf.keys()) == 10
+    assert len(conf.keys()) == 8
 
     # matrix section
     assert conf['matrix']['homeserver'] == "https://example.com"
     assert conf['matrix']['user_id'] == "@notflixbot:example.com"
-    assert len(conf['matrix']) == 3
+    assert conf['matrix']['rooms'][0] == "#myroom:example.com"
+    assert len(conf['matrix']) == 4
 
     # webhook section
     assert len(conf['webhook']['tokens']) > 0
 
     # admin_user_ids section
-    assert "@admin:example.com" in conf['admin_user_ids']
+    assert "#admins:example.com" in conf['admin_rooms']
 
     # log section
     assert conf['log']['level'] in ["DEBUG", "INFO", "WARN", "ERROR"]
     assert conf['log']['stderr'] == True
     assert isinstance(conf['log']['json'], bool)
-    assert len(conf['log']) == 4
+    assert len(conf['log']) == 5
 
-    assert conf['cmd_prefixes']["%ruok"] == "ruok"
-    assert len(conf['cmd_prefixes']) == 3
     assert conf['autotrust'] == False
-    assert conf['credentials_path'] == "credentials-sample.json"
-    assert conf['storage_path'] == "/var/lib/notflixbot/store"
+    assert conf['credentials_path'] == "/data/credentials-sample.json"
+    assert conf['storage_path'] == "/data/store"
 
 def test_config_missing_level():
     with pytest.raises(errors.ConfigError):
@@ -56,25 +53,26 @@ def test_config_parser():
     assert conf.user_id == "@notflixbot:example.com"
     assert conf.device_name == "sample"
     assert conf.avatar is None
+    assert isinstance(conf.rooms, list)
+    assert conf.rooms[0] == "#myroom:example.com"
+    assert all(a.startswith('#') for a in conf.rooms)
     assert isinstance(conf.webhook_tokens, dict)
     assert len(conf.webhook_tokens.keys()) > 0
-    assert conf.cmd_prefixes["%ruok"] == "ruok"
-    assert isinstance(conf.cmd_prefixes, dict)
-    assert len(conf.cmd_prefixes.keys()) == 3
-    assert "%ruok" in conf.cmd_prefixes
-    assert isinstance(conf.admin_cmds, list)
-    assert len(conf.admin_cmds) == 1
-    assert "%ruok" in conf.admin_cmds
-    assert isinstance(conf.admin_user_ids, list)
-    assert len(conf.admin_user_ids) == 1
-    assert "@admin:example.com" in conf.admin_user_ids
+    assert conf.webhook_base_url == "/"
+    assert conf.webhook_port == 3000
+    assert conf.webhook_host == "127.0.0.1"
+    assert all(a.startswith('#') for a in conf.admin_rooms)
+    assert isinstance(conf.admin_rooms, list)
+    assert len(conf.admin_rooms) == 1
+    assert "#admins:example.com" in conf.admin_rooms
     assert conf.autotrust is False
-    assert conf.credentials_path == "credentials-sample.json"
-    assert conf.storage_path == "/var/lib/notflixbot/store"
+    assert conf.credentials_path == "/data/credentials-sample.json"
+    assert conf.storage_path == "/data/store"
     assert conf.log['level'] in ["DEBUG", "INFO", "WARN", "ERROR"]
     assert conf.log['logfile'] == "notflixbot.log"
     assert conf.log['json'] is True
     assert conf.log['stderr'] is True
+    assert conf.log['webhook_access_log'] == "webhook_access.log"
     assert isinstance(conf.notflixbot, dict)
 
 
@@ -113,6 +111,30 @@ def test_avatar():
     j['matrix']['avatar'] = "mxc://example.com/foobar"
     conf = config.Config(j, 'config-test.json')
     assert conf.avatar == "mxc://example.com/foobar"
+
+def test_setting_webhook_base_url():
+    j = read_json_file("config-sample.json")
+    # trailing slash should get added by config.py
+    j['webhook']['base_url'] = "/test"
+    conf = config.Config(j, 'config-test.json')
+    assert conf.webhook_base_url == "/test/"
+
+def test_setting_webhook_base_url_with_trailing_slash():
+    j = read_json_file("config-sample.json")
+    # just making sure that extra trailing slashes arent added
+    j['webhook']['base_url'] = "/test/"
+    conf = config.Config(j, 'config-test.json')
+    assert conf.webhook_base_url == "/test/"
+
+def test_setting_invalid_webhook_base_url():
+    j = read_json_file("config-sample.json")
+    j['webhook']['base_url'] = "invalid/"
+    with pytest.raises(errors.ConfigError):
+        conf = config.Config(j, 'config-test.json')
+
+def test_webhook_base_url_default():
+    conf = config.Config.read('config-sample.json')
+    assert conf.webhook_base_url == "/"
 
 def test_config_parser_missing_wihout_default():
     j = read_json_file("config-sample.json")
@@ -156,3 +178,14 @@ def test_autotrust_default():
     assert 'autotrust' not in c
     conf = config.Config(c, 'config-test.json')
     assert conf.autotrust is False
+
+def test_webhook_host_port():
+    c = read_json_file('config-sample.json')
+    # RFC5737
+    c['webhook']['host'] = "128.66.4.20"
+    c['webhook']['port'] = "6666"
+
+    conf = config.Config(c, 'config-test.json')
+    assert isinstance(conf.webhook_port, int)
+    assert conf.webhook_host == "128.66.4.20"
+    assert conf.webhook_port == 6666
