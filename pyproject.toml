@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "notflixbot"
-version = "0.1.0"
+version = "0.1.10"
 description = ""
 authors = ["Benedikt Kristinsson <benedikt@lokun.is>"]
 

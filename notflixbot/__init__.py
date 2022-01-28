@@ -2,8 +2,11 @@ import importlib.metadata
 from loguru import logger
 
 __version__ = importlib.metadata.version(__name__)
+# avoid a stupid sed command i added to a jenkins pipeline
+# until i throw it out
+_version = importlib.metadata.version(__name__)
 version_dict = {
-    'version': __version__,
+    'version': _version,
     'name': __name__
 }
-logger.info(f"{__name__} {__version__}")
+logger.info(f"{__name__} {_version}")

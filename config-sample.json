@@ -2,9 +2,13 @@
     "matrix": {
         "homeserver": "https://example.com",
         "user_id": "@notflixbot:example.com",
-        "device_name": "sample"
+        "device_name": "sample",
+        "rooms": [ "#myroom:example.com" ]
+
     },
     "webhook": {
+        "host": "127.0.0.1",
+        "port": 3000,
         "tokens": {
             "123abc": "#room:example.com"
         }
@@ -14,28 +18,19 @@
         "radarr_api_key": "abc123",
         "themoviedb_api_key": "def456"
     },
-
-    "cmd_prefixes": {
-        "%ruok": "ruok",
-        "%whoami": "whoami",
-        "%key_sync": "key_sync"
-    },
-    "admin_cmds": [
-        "%ruok"
-    ],
-    "admin_user_ids": [
-        "@admin:example.com"
+    "admin_rooms": [
+        "#admins:example.com"
     ],
 
     "autotrust": false,
-
-    "credentials_path": "credentials-sample.json",
-    "storage_path": "/var/lib/notflixbot/store",
+    "credentials_path": "/data/credentials-sample.json",
+    "storage_path": "/data/store",
 
     "log": {
         "level": "INFO",
         "logfile": "notflixbot.log",
         "json": true,
-        "stderr": true
+        "stderr": true,
+        "webhook_access_log": "webhook_access.log"
     }
 }

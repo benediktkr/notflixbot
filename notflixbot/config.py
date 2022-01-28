@@ -66,7 +66,9 @@ class Config(object):
             'level': self._get_cfg(["log", "level"], required=True),
             'logfile': self._get_cfg(["log", "logfile"], required=False),
             'json': self._get_cfg(["log", "json"], default=False),
-            'stderr': self._get_cfg(["log", "stderrr"], default=True)
+            'stderr': self._get_cfg(["log", "stderrr"], default=True),
+            'webhook_access_log': self._get_cfg(
+                ["log", "webhook_access_log"], default=None)
         }
         setup_logger(self.log, self._debug_arg)
 
@@ -82,15 +84,22 @@ class Config(object):
         self.rooms = self._get_cfg(
             ["matrix", "rooms"], default=list())
 
-        self.webhook_port = self._get_cfg(["webhook", "port"], default=3000)
+        self.webhook_port = int(self._get_cfg(
+            ["webhook", "port"], default=3000))
+        self.webhook_host = self._get_cfg(
+            ["webhook", "host"], default="127.0.0.1")
+        self.webhook_base_url = self._get_cfg(
+            ['webhook', 'base_url'], default='/')
+        if not self.webhook_base_url.startswith("/"):
+            raise ConfigError("webhook.base_url needs to start with '/'")
+        if not self.webhook_base_url.endswith("/"):
+            self.webhook_base_url = self.webhook_base_url + "/"
         self.webhook_tokens = self._get_cfg(
             ["webhook", "tokens"], default=dict())
 
         self.notflixbot = self._get_cfg(["notflixbot"], default=dict())
         self.autotrust = self._get_cfg(["autotrust"], default=False)
-        self.cmd_prefixes = self._get_cfg(["cmd_prefixes"], required=True)
-        self.admin_cmds = self._get_cfg(["admin_cmds"], default=list())
-        self.admin_user_ids = self._get_cfg(['admin_user_ids'], default=list())
+        self.admin_rooms = self._get_cfg(['admin_rooms'], default=list())
         self.credentials_path = self._get_cfg(["credentials_path"])
         try:
             self.creds = Credentials.read(self.credentials_path)
@@ -126,6 +135,8 @@ class Credentials(Config):
 
 def setup_logger(logconf, debug_arg):
 
+    # TODO: switch to using logger.configure
+
     # removing default logger thats on the stderr sink
     logger.remove()
 
@@ -133,10 +144,36 @@ def setup_logger(logconf, debug_arg):
 
     # --debug has precedence, but only affects stderr
     if debug_arg:
-        logger.add(sys.stderr, level="DEBUG")
+        logger.add(
+            sys.stderr,
+            level="DEBUG",
+            enqueue=True,
+            filter=lambda r: 'access_log' not in r['extra']
+        )
     elif logconf.get('stderr', False) is True:
-        logger.add(sys.stderr, level=loglevel)
+        logger.add(
+            sys.stderr,
+            level=loglevel,
+            enqueue=True,
+            filter=lambda r: 'access_log' not in r['extra']
+        )
 
     if logconf.get('logfile') is not None:
-        logger.add(logconf['logfile'], level=loglevel,
-                   serialize=logconf['json'])
+        logger.add(
+            logconf['logfile'],
+            level=loglevel,
+            enqueue=True,
+            filter=lambda r: 'access_log' not in r['extra'],
+            serialize=logconf['json']
+        )
+
+    webhook_access_log = logconf.get('webhook_access_log')
+    if webhook_access_log is not None:
+        logger.add(
+            webhook_access_log,
+            level="INFO",
+            colorize=True,
+            format="<green>{time}</green> | {level} - <level>{message}</level>", # noqa
+            enqueue=True,
+            filter=lambda r: 'access_log' in r['extra'],
+        )

@@ -144,9 +144,11 @@ credentials-neo.json
 credentials-*.json
 credentials.json
 config.json
+data/
 notflixbot.json
 neo.json
 notflixbot.log
+webhook_access.log
 bullit.py
 nio_store/
 neo_store/

@@ -3,19 +3,26 @@ import asyncio
 import click
 import getpass
 import json
+from urllib.parse import urlparse, parse_qs, urljoin
 
 from loguru import logger
 from markdown import markdown
+from nio.responses import WhoamiError
+from nio.crypto import TrustState
+from nio.exceptions import OlmUnverifiedDeviceError
 from nio import AsyncClient, AsyncClientConfig, MatrixRoom
 from nio import RoomMessageText, SyncResponse, InviteMemberEvent
 from nio import RoomMemberEvent
 from nio import LoginError, JoinError, ProfileSetAvatarError
-from nio.responses import WhoamiError
-from nio.crypto import TrustState
+from nio import RoomResolveAliasError
 import zmq.asyncio
+# TODO: use aiohttp
+import requests
 
+from notflixbot import version_dict
 from notflixbot.notflix import Notflix
 from notflixbot.errors import NotflixbotError, MatrixError, ImdbError
+from notflixbot.emojis import ROBOT
 
 
 class MatrixClient:
@@ -39,6 +46,14 @@ class MatrixClient:
         self.homeserver = config.homeserver
         self.user_id = config.user_id
 
+        self.admin_room_ids = list()
+        try:
+            self._default_room = self.config.rooms[0]
+            logger.info(f"default room: {self._default_room}")
+        except KeyError:
+            self._default_room = None
+            logger.warning("no rooms in config, default_room not set")
+
         self._context = ctx
         self._socket = self._context.socket(zmq.PAIR)
         self._socket.bind("inproc://webhook")
@@ -47,6 +62,7 @@ class MatrixClient:
 
         self.nio = AsyncClient(self.homeserver, self.user_id)
         self.cmd_handlers = dict()
+        self.help_text = dict()
         self._callbacks()
         self._cmd_handlers()
 
@@ -59,6 +75,9 @@ class MatrixClient:
         await self.close()
 
     async def close(self):
+        if self.nio.logged_in:
+            if self._default_room is not None:
+                await self.send_msg(self._default_room, "❌ shutting down")
         await self.nio.close()
         logger.info("exited.")
 
@@ -79,7 +98,6 @@ class MatrixClient:
 
         logger.debug(f"connecting to '{self.config.homeserver}'")
         await self._set_creds()
-        await self._key_sync()
 
         whoami = await self.nio.whoami()
         if isinstance(whoami, WhoamiError):
@@ -88,6 +106,16 @@ class MatrixClient:
             raise MatrixError(whoami)
         else:
             logger.info(f"matrix bot running as {self.nio.user_id}")
+
+    async def sync_forever(self):
+        """this starts the event loop, and does the first sync, which
+        unblocks self._after_first_sync.
+
+        but we cant call self._after_first_sync here because then it is
+        blocked and waiting for the first iteration of the sync loop to start
+        """
+        logger.info("matrix client syncing forever")
+        return await self.nio.sync_forever(timeout=3000, full_state=True)
 
     async def start(self):
         if not self.nio.logged_in:
@@ -102,15 +130,21 @@ class MatrixClient:
                 self.nio.sync_forever(timeout=3000, full_state=True)
             ))
 
-    async def zmq_poller(self):
+    async def webhook_poller(self):
+        logger.info("polling zmq socket")
         while True:
             # keyboard interrupt?
             events = await self._poller.poll(3000)
             if self._socket in dict(events):
-                msg = await self._socket.recv_string()
-                logger.success(msg)
-                data = json.loads(msg)
-                await self.send_msg(data['room'], data['msg'])
+                z_data = await self._socket.recv_string()
+                m_data = json.loads(z_data)
+
+                room = m_data['room']
+                msg = m_data['msg']
+                plain = m_data.get('plain')
+                logger.debug(f"{room}: '{msg}'")
+
+                await self.send_msg(room, msg, plain)
 
     async def _room_id(self, room_addr):
         if room_addr.startswith('!'):
@@ -118,6 +152,9 @@ class MatrixClient:
             return room_addr
 
         room = await self.nio.room_resolve_alias(room_addr)
+        if isinstance(room, RoomResolveAliasError):
+            raise MatrixError(f"cannot resolve: '{room_addr}'")
+
         return room.room_id
 
     async def _after_first_sync(self):
@@ -128,10 +165,19 @@ class MatrixClient:
         for room_id in joined.rooms:
             await self._trust_all_users_in_room(room_id)
 
+        for room_alias in self.config.admin_rooms:
+            admin_room_id = await self._room_id(room_alias)
+            self.admin_room_ids.append(admin_room_id)
+
         if self.config.avatar:
             await self._avatar()
 
-        logger.debug('after_first_sync done')
+        if self._default_room is not None:
+            msg = f"{ROBOT} `{version_dict['name']} {version_dict['version']}`"
+            await self.send_msg(self._default_room, msg)
+
+        await self._key_sync()
+        logger.debug("first sync is done")
 
     async def _set_creds(self):
         self.nio.user_id = self.config.creds.user_id
@@ -155,10 +201,17 @@ class MatrixClient:
             logger.debug("set avatar")
 
     def _cmd_handlers(self):
-        self.cmd_handlers['ruok'] = self._handle_ruok
-        self.cmd_handlers['whoami'] = self._handle_whoami
-        self.cmd_handlers['key_sync'] = self._key_sync
-        self.cmd_handlers['add'] = self._handle_add
+        self.cmd_handlers['!add'] = self._handle_add
+        self.help_text["!add"] = "usage: `!add $IMDB_URL`"
+        self.cmd_handlers['!ruok'] = self._handle_ruok
+        self.help_text['!ruok'] = "check if the bot is ok"
+        self.cmd_handlers['!whoami'] = self._handle_whoami
+        self.help_text['!whoami'] = "show your user id"
+        self.cmd_handlers['!key_sync'] = self._key_sync
+        self.help_text["!key_sync"] = "force a key sync"
+        self.cmd_handlers['!help'] = self._handle_help
+        self.help_text["!help"] = "this message"
+        self.cmd_handlers['!crash'] = self._handle_crash
 
     def _callbacks(self):
         self.nio.add_event_callback(
@@ -214,7 +267,8 @@ class MatrixClient:
         except aiohttp.client_exceptions.ClientError as e:
             raise MatrixError(repr(e))
 
-    async def _trust_all_users_in_room(self, room_id):
+    async def _trust_all_users_in_room(self, room):
+        room_id = await self._room_id(room)
         members = await self.nio.joined_members(room_id)
         for u in members.members:
             await self._trust_user_devices(u.user_id)
@@ -282,38 +336,95 @@ class MatrixClient:
         # display_name = room.display_name
         user_id = event.sender
         room_id = room.room_id
-        msg = event.body
+        if room.canonical_alias is not None:
+            room_alias = room.canonical_alias
+        else:
+            room_alias = room.room_id
+
+        msg = event.body.strip()
         logger.debug(f"room: {room_id}, user_id: {user_id}, msg: '{msg}'")
 
         # "".split(" ")[0] -> ""
         cmd = event.body.strip().split(' ')
         prefix = cmd[0]
 
-        handler_name = self.config.cmd_prefixes.get(prefix, None)
-        if handler_name is not None:
-            admin_cmd = prefix in self.config.admin_cmds
-            is_admin = user_id in self.config.admin_user_ids
-            if admin_cmd and not is_admin:
+        if prefix in self.cmd_handlers:
+            if room_id not in self.admin_room_ids:
                 logger.warning(
-                    f"ignorning admin command '{msg}' from '{user_id}'")
+                    f"ignored cmd '{msg}' by {user_id} in {room_alias}")
             else:
-                try:
-                    handler_func = self.cmd_handlers[handler_name]
-                    await handler_func(room, event)
-                except KeyError:
-                    logger.error(
-                        f"no handler function found for '{handler_name}'!")
+                handler_func = self.cmd_handlers[prefix]
+                await handler_func(room, event)
+
+        elif "youtube.com" in msg or "youtu.be" in msg:
+            await self._youtube(room, event)
         else:
             await self._phrase_respond(room, event)
 
     async def _phrase_respond(self, room, event):
         phrases = {
-            'are you alive?': 'no im a `robot`'
+            'are you alive?': 'no im a `robot`',
+            'i am a robot': 'FILTHY LIES',
+            "i'm a robot": 'FILTHY LIES',
+            'im a robot': 'FILTHY LIES',
+            'fuck you': '🖕',
+            'duck you': '🦆',
         }
-        msg = event.body.strip()
+        # keywords = {
+        #     'cheese': 'did someone say 🧀?'
+        # }
+        msg = event.body.strip().lower()
         response = phrases.get(msg, None)
         if response is not None:
             await self.send_msg(room.room_id, response)
+
+    async def _youtube(self, room, event):
+        for w in event.body.split(' '):
+            try:
+                ytid = self._get_youtube_video_id(w.strip())
+                iv_base = self.config.notflixbot['invidious_url']
+                iv_videos = urljoin(iv_base, "/api/v1/videos/")
+                iv_api_url = urljoin(iv_videos, ytid)
+
+                r = requests.get(iv_api_url, timeout=1.2)
+                j = r.json()
+                if 'error' in j:
+                    return
+
+                title = j['title']
+                iv_url = urljoin(iv_base, "/watch?v=") + ytid
+
+                msg = f"🎥 {title} | [open with YouBahn]({iv_url})"
+                plain = f"🎥 {title}"
+                await self.send_msg(room.room_id, msg, plain)
+
+            except requests.exceptions.ReadTimeout as e:
+                logger.warning(e)
+            except ValueError:
+                # no youtube id found
+                pass
+
+    def _get_youtube_video_id(self, youtube_url):
+        if "youtube.com" in youtube_url:
+            q = parse_qs(urlparse(youtube_url).query)
+            if 'v' in q:
+                # parse_qs returns a list if 'v' in q,
+                # but raises a KeyERror if it isnt in q
+                # so this is safe
+                return q['v'][0]
+
+        elif "youtu.be" in youtube_url:
+            p = urlparse(youtube_url).path[1:]
+            return p
+
+        else:
+            raise ValueError("no youtube id found")
+
+    async def _handle_help(self, room, event):
+        cmds = "<br>".join([f"`{k}`: {v}" for k, v in self.help_text.items()])
+        n = version_dict['name']
+        v = version_dict['version']
+        await self.send_msg(room.room_id, f"`{n} v{v}` help: \n\n{cmds}")
 
     async def _handle_whoami(self, room, event):
         your_id = event.sender
@@ -324,6 +435,10 @@ class MatrixClient:
     async def _handle_ruok(self, room, event):
         await self.send_msg(room.room_id, "`iamok`")
 
+    async def _handle_crash(self, room, event):
+        # CRASH AND BURN
+        return 1/0
+
     async def _handle_add(self, room, event):
         try:
             msg = event.body.strip().split(' ')
@@ -333,6 +448,13 @@ class MatrixClient:
                 await self.send_msg(
                     room.room_id,
                     f"added: {item['title']} ({item['release_year']})")
+            else:
+                try:
+                    errmsg = item[0]['errorMessage']
+                    await self.send_msg(room.room_id, errmsg)
+                except (IndexError, KeyError):
+                    pass
+
             return item
         except IndexError:
             logger.error(f"invalid msg from {event.sender}: '{event.body}'")
@@ -340,23 +462,60 @@ class MatrixClient:
         except ImdbError as e:
             logger.warning(e)
 
-    async def send_msg(self, room, msg):
+    async def send_msg(self, room, msg, plain=None):
+        """wrapper function to handle exceptions cleanly
+        """
+
+        try:
+            return await self._send_msg(room, msg, plain)
+        except OlmUnverifiedDeviceError as e:
+            logger.warning(e)
+            # self.nio.verify_device(e.devide)
+            await self._trust_user_devices(e.device.user_id)
+            return await self._send_msg(room, msg, plain)
+
+    async def _send_msg(self, room, msg, plain=None):
         # msgtypes:
         #  * m.notice: looks more grey?
         #  * m.text: normal?
         #  * m.room.message: no markdown
 
-        room_id = await self._room_id(room)
+        if msg is None:
+            msg = ""
+
+        if plain is None:
+            plain = msg
+
+        # strip away simple markdown that i use most commonly
+        plain = plain.replace('`', '')
+
+        try:
+            room_id = await self._room_id(room)
+        except MatrixError as e:
+            # webhook isnt aware of this
+            logger.error(e)
+            return
+
         await self.nio.room_send(
             room_id,
             message_type="m.room.message",
             content={
-                'msgtype': 'm.notice',
+                'msgtype': 'm.text',
                 'format': 'org.matrix.custom.html',
                 'formatted_body': markdown(msg),
-                'body': msg
+                'body': plain
             },
             ignore_unverified_devices=False
         )
 
         logger.debug(f"sent '{msg}' to '{room_id}'")
+
+
+def markdown_json(msg):
+    return "\r\n".join(
+        [f"    {a}" for a in json.dumps(msg, indent=2).splitlines()]
+    )
+
+
+def make_pill(user_id):
+    return f'<a href="https://matrix.to/#/{user_id}">{user_id}</a>'
