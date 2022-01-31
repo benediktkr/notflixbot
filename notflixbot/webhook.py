@@ -352,7 +352,7 @@ class Webhook:
             SE = f"S{j['SeasonNumber00']}E{j['EpisodeNumber00']}"
 
             url = urljoin(host, urlpath) + itemid
-            msg = f"{TV_EPISODE} [{series} {SE}]({url})"
+            msg = f"{TV_EPISODE} {series}: [{SE}]({url})"
             plain = f"{TV_EPISODE} {series} {SE}"
             await self._send(request['room'], msg, plain)
 

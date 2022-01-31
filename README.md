@@ -1,6 +1,7 @@
 # notflixbot
 
-![build status](https://jenkins.sudo.is/buildStatus/icon?job=notflixbot&style=flat-square)
+
+[![Build Status](https://jenkins.sudo.is/buildStatus/icon?job=ben%2Fnotflixbot%2Fmain&style=flat-square)](https://jenkins.sudo.is/job/ben/job/notflixbot/job/main/)
 ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/benediktkr/notflixbot?sort=semver&style=flat-square)
 ![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/benediktkr/notflixbot?sort=date&style=flat-square)
 
