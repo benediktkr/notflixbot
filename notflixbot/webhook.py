@@ -255,7 +255,7 @@ class Webhook:
             for item in j['evalMatches']:
                 value = item['value']
                 if isinstance(value, float):
-                    v = f"{value:.2f}"
+                    v = f"{value:.3f}"
                 else:
                     v = value
                 matches.append(f'"{item["metric"]}": {v}')
@@ -323,6 +323,11 @@ class Webhook:
             msg = f"{PERSON} `{user}` is online from {device} ({client})"
             await self._send(request['room'], msg, not_again=True)
 
+        elif notification_type == "UserCreated":
+            user = j['NotificationUsername']
+
+            msg = f"{PERSON} user creted: `{user}`"
+            await self._send(request['room'], msg)
         elif notification_type == "ItemAdded" and j['ItemType'] == "Movie":
             host = j['ServerUrl']
             itemid = j['ItemId']
