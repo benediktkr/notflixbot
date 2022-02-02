@@ -57,6 +57,7 @@ class Webhook:
             post(url("jellyfin"), self._handle_jellyfin),
             post(url("jellyfin/{token}"), self._handle_jellyfin),
             post(url("grafana"), self._handle_grafana),
+            post(url("authentik/{token}"), self._handle_authentik),
             get(url("ruok"), self._handle_ruok),
         ])
 
@@ -194,6 +195,22 @@ class Webhook:
 
     async def _handle_ruok(self, request):
         return json_response({'ruok': 'iamok'})
+
+    async def _handle_authentik(self, request):
+        email = request['json']['user_email']
+        user = request['json']['user_username']
+        j_body = request['json']['body']
+
+        if j_body.startswith("Test Notification from transport"):
+            msg = f"{OK} authentik webhook test"
+            plain = msg
+
+        else:
+            msg = f"[**{user}**] {j_body}"
+            plain = f"[{user} {j_body}"
+
+        await self._send(request['room'], msg, plain)
+        return json_response("ok")
 
     async def _handle_incoming(self, request):
         """following the slack webhook request format

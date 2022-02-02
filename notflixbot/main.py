@@ -10,11 +10,6 @@ from notflixbot.config import Config
 from notflixbot.matrix import MatrixClient
 from notflixbot.webhook import Webhook
 
-COMMANDS = [
-    ("serve", "start matrix bot"),
-    ("restore_login", "new matrix session")
-]
-
 
 def get_parser():
     parser = argparse.ArgumentParser(
