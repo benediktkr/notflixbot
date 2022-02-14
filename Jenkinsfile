@@ -1,3 +1,3 @@
 @Library('shared-jenkins-pipelines') _
 
-pythondocker docker: true
+dockerimg tag: 'latest', dockreg: 'dockreg.sudo.is'

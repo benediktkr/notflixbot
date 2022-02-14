@@ -6,8 +6,10 @@ import zmq.asyncio
 from aiohttp import ClientConnectionError, ServerDisconnectedError
 from loguru import logger
 
+from notflixbot import version_dict
 from notflixbot.config import Config
 from notflixbot.errors import ConfigError
+from notflixbot.healthcheck import healthcheck
 from notflixbot.matrix import MatrixClient
 from notflixbot.webhook import Webhook
 
@@ -28,6 +30,7 @@ def get_parser():
     subparser.add_parser("start", help="start matrix bot")
     subparser.add_parser("restore_login", help="start new matrix session")
     subparser.add_parser("webhook", help="start webhook http server")
+    subparser.add_parser("healthcheck", help="run healthcheck on http server")
     nio_parser = subparser.add_parser("nio",
                                       help="low-level stuff, helpful for dev")
     nio_parser.add_argument("--forget-room", type=str, required=True,
@@ -38,18 +41,11 @@ def get_parser():
 
 @logger.catch
 @MatrixClient.catch
-async def async_main():
-    try:
-        parser = get_parser()
-        args = parser.parse_args()
+async def async_main(args, config):
+    logger.info(f"{version_dict['name']} {version_dict['version']}")
 
-        config = Config.read(args.config, args.debug)
+    try:
         ctx = zmq.asyncio.Context()
-    except ConfigError as e:
-        logger.error(e)
-        raise SystemExit(2) from e
-
-    try:
         webhook = Webhook(config, ctx)
 
         if args.subcmd == "webhook":
@@ -58,6 +54,7 @@ async def async_main():
 
         async with MatrixClient(config, ctx) as matrix:
             if args.subcmd == "start":
+
                 await matrix.auth()
 
                 await asyncio.gather(
@@ -89,10 +86,21 @@ async def async_main():
 
 
 def main():
+    try:
+        parser = get_parser()
+        args = parser.parse_args()
+        config = Config.read(args.config, args.debug)
+    except ConfigError as e:
+        logger.error(e)
+        raise SystemExit(2) from e
+
+    if args.subcmd == "healthcheck":
+        return healthcheck(config.webhook_host, config.webhook_port)
+
     while True:
         try:
             asyncio.run(
-                async_main()
+                async_main(args, config)
             )
         except KeyboardInterrupt:
             logger.warning("C-c was passed, exiting..")

@@ -85,7 +85,7 @@ class Webhook:
         method = request.method
         path_qs = request.path_qs
 
-        if path_qs == urljoin(self.base_url, "ruok"):
+        if path_qs == "/ruok":
             level = "DEBUG"
         elif status in range(500, 600):
             level = "ERROR"
@@ -123,7 +123,13 @@ class Webhook:
     @middleware
     async def _middleware_json(self, request, handler):
         try:
-            request['json'] = await request.json()
+
+            text = await request.text()
+            if text == "":
+                request['json'] = dict()
+            else:
+                request['json'] = json.loads(text)
+
             response = await handler(request)
             return response
         except json.decoder.JSONDecodeError as e:
@@ -142,8 +148,8 @@ class Webhook:
 
         """
 
-        if request.path_qs == urljoin(self.base_url, "ruok"):
-            return await handler(request)
+        if request.path_qs == "/ruok":
+            return await self._handle_ruok(request)
 
         if 'Authorization' in request.headers:
             auth = BasicAuth.decode(request.headers['Authorization'])

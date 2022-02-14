@@ -53,7 +53,7 @@ RUN python3 -m pip install /tmp/notflixbot-*.tar.gz && \
 
 COPY config.json /etc/notflixbot.json
 
-# HEALTHCHECK --start-period=5s --interval=15s --timeout=1s \
-#   CMD curl -f http://localhost:3333/api/ruok || exit 1
-# EXPOSE 3333/tcp
+HEALTHCHECK --start-period=5s --interval=15s --timeout=1s \
+        CMD notflixbot -c /etc/notflixbot.json healthcheck
+
 CMD ["notflixbot", "-c", "/etc/notflixbot.json"]
