@@ -3,6 +3,8 @@ name = "notflixbot"
 version = "0.2.0"
 description = ""
 authors = ["Benedikt Kristinsson <benedikt@lokun.is>"]
+readme = "README.md"
+repository = "https://git.sudo.is/ben/notflixbot"
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -17,11 +19,25 @@ requests = "^2.27.1"
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 flake8 = "^4.0.1"
+isort = "^5.10.1"
+black = "^22.1.0"
 
 [tool.poetry.scripts]
 notflixbot = "notflixbot.main:main"
-bullit = "notflixbot.bullit:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+skip = [".gitignore", ".dockerignore", ".git", "tests"]
+extend_skip = [".md", ".json", ".toml"]
+multi_line_output = 9
+profile = "black"
+line_length = 79
+quiet = true
+
+[tool.black]
+line-length = 80
+target-version = ["py39"]
+exclude = ["tests"]
