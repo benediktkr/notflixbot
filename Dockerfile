@@ -35,9 +35,9 @@ RUN poetry install --no-interaction --ansi
 
 COPY config-sample.json /builder
 
-RUN poetry run pytest || true
-RUN poetry run flake8 || true
-RUN poetry run isort . --check || true
+RUN poetry run pytest
+RUN poetry run flake8
+RUN poetry run isort . --check
 
 RUN poetry build --no-interaction --ansi
 RUN poetry export --without-hashes > /builder/requirements.txt

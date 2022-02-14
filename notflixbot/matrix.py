@@ -1,13 +1,9 @@
 import asyncio
 import getpass
 import json
-from urllib.parse import parse_qs, urljoin, urlparse
 
 import aiohttp.client_exceptions
 import click
-
-# TODO: use aiohttp
-import requests
 import zmq.asyncio
 from loguru import logger
 from markdown import markdown
@@ -22,6 +18,7 @@ from notflixbot import version_dict
 from notflixbot.emojis import ROBOT
 from notflixbot.errors import ImdbError, MatrixError, NotflixbotError
 from notflixbot.notflix import Notflix
+from notflixbot.youtube import Youtube
 
 
 class MatrixClient:
@@ -66,6 +63,7 @@ class MatrixClient:
         self._cmd_handlers()
 
         self.notflix = Notflix(config.notflixbot)
+        self.youtube = Youtube(config.notflixbot)
 
     async def __aenter__(self):
         return self
@@ -356,7 +354,11 @@ class MatrixClient:
                 await handler_func(room, event)
 
         elif "youtube.com" in msg or "youtu.be" in msg:
-            await self._youtube(room, event)
+            yt_unfurl = await self.youtube.unfurl(msg)
+            if yt_unfurl is not None:
+                yt_msg = yt_unfurl[0]
+                yt_plain = yt_unfurl[1]
+                await self.send_msg(room.room_id, yt_msg, yt_plain)
         else:
             await self._phrase_respond(room, event)
 
@@ -376,48 +378,6 @@ class MatrixClient:
         response = phrases.get(msg, None)
         if response is not None:
             await self.send_msg(room.room_id, response)
-
-    async def _youtube(self, room, event):
-        for w in event.body.split(' '):
-            try:
-                ytid = self._get_youtube_video_id(w.strip())
-                iv_base = self.config.notflixbot['invidious_url']
-                iv_videos = urljoin(iv_base, "/api/v1/videos/")
-                iv_api_url = urljoin(iv_videos, ytid)
-
-                r = requests.get(iv_api_url, timeout=1.2)
-                j = r.json()
-                if 'error' in j:
-                    return
-
-                title = j['title']
-                iv_url = urljoin(iv_base, "/watch?v=") + ytid
-
-                msg = f"🎥 {title} | [open with YouBahn]({iv_url})"
-                plain = f"🎥 {title}"
-                await self.send_msg(room.room_id, msg, plain)
-
-            except requests.exceptions.ReadTimeout as e:
-                logger.warning(e)
-            except ValueError:
-                # no youtube id found
-                pass
-
-    def _get_youtube_video_id(self, youtube_url):
-        if "youtube.com" in youtube_url:
-            q = parse_qs(urlparse(youtube_url).query)
-            if 'v' in q:
-                # parse_qs returns a list if 'v' in q,
-                # but raises a KeyERror if it isnt in q
-                # so this is safe
-                return q['v'][0]
-
-        elif "youtu.be" in youtube_url:
-            p = urlparse(youtube_url).path[1:]
-            return p
-
-        else:
-            raise ValueError("no youtube id found")
 
     async def _handle_help(self, room, event):
         cmds = "<br>".join([f"`{k}`: {v}" for k, v in self.help_text.items()])
