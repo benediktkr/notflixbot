@@ -4,6 +4,7 @@ from time import sleep
 
 from loguru import logger
 import zmq.asyncio
+from aiohttp import ClientConnectionError, ServerDisconnectedError
 
 from notflixbot.errors import ConfigError
 from notflixbot.config import Config
@@ -81,6 +82,10 @@ async def async_main():
 
     except asyncio.CancelledError:
         logger.info("Cancelled")
+
+    except (ClientConnectionError, ServerDisconnectedError):
+        logger.warning("Unable to connect to homeserver, retrying in 15s...")
+        sleep(15)
 
 
 def main():

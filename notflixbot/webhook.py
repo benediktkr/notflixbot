@@ -197,7 +197,6 @@ class Webhook:
         return json_response({'ruok': 'iamok'})
 
     async def _handle_authentik(self, request):
-        email = request['json']['user_email']
         user = request['json']['user_username']
         j_body = request['json']['body']
 

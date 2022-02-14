@@ -11,8 +11,8 @@ from nio.responses import WhoamiError
 from nio.crypto import TrustState
 from nio.exceptions import OlmUnverifiedDeviceError
 from nio import AsyncClient, AsyncClientConfig, MatrixRoom
-from nio import RoomMessageText, SyncResponse, InviteMemberEvent
-from nio import RoomMemberEvent
+from nio import RoomMessageText, InviteMemberEvent
+from nio import RoomMemberEvent, MegolmEvent
 from nio import LoginError, JoinError, ProfileSetAvatarError
 from nio import RoomResolveAliasError
 import zmq.asyncio
@@ -218,7 +218,7 @@ class MatrixClient:
             self._cb_invite_filtered, (InviteMemberEvent,))
         self.nio.add_event_callback(self._cb_message, (RoomMessageText,))
         self.nio.add_event_callback(self._cb_room_member, (RoomMemberEvent,))
-        self.nio.add_response_callback(self._cb_sync, SyncResponse)
+        self.nio.add_event_callback(self._cb_decryption_fail, (MegolmEvent,))
 
     async def _key_sync(self, room=None, event=None):
         if self.nio.should_upload_keys:
@@ -282,10 +282,11 @@ class MatrixClient:
                 else:
                     logger.debug(f"already trust {dev_id} from user {user_id}")
 
-    async def _cb_sync(self, response: SyncResponse) -> None:
-        """called every time `sync_forever` sucessfully syncs with the server
-        """
-        logger.trace(f"synced: {response}")
+    async def _cb_decryption_fail(self, room: MatrixRoom,
+                                  event: MegolmEvent) -> None:
+        red_x_and_lock_emoji = "❌ 🔐"
+        logger.warning(f"unable to decrypt message from {event.sender}")
+        self.react_to_event(room.room_id, event.event_id, red_x_and_lock_emoji)
 
     async def _cb_room_member(self, room: MatrixRoom,
                               event: RoomMemberEvent) -> None:
@@ -299,7 +300,6 @@ class MatrixClient:
                          event: InviteMemberEvent) -> None:
         """for when an invite is received, join the room specified in the invite
         """
-
         logger.debug(f"got invite to {room.room_id} from {event.sender}")
 
         result = await self.nio.join(room.room_id)
@@ -342,7 +342,7 @@ class MatrixClient:
             room_alias = room.room_id
 
         msg = event.body.strip()
-        logger.debug(f"room: {room_id}, user_id: {user_id}, msg: '{msg}'")
+        # logger.debug(f"room: {room_id}, user_id: {user_id}, msg: '{msg}'")
 
         # "".split(" ")[0] -> ""
         cmd = event.body.strip().split(' ')
@@ -459,8 +459,9 @@ class MatrixClient:
         except IndexError:
             logger.error(f"invalid msg from {event.sender}: '{event.body}'")
             self.send_msg(room.room_id, "url is missing")
-        except ImdbError as e:
+        except (NotflixbotError, ImdbError) as e:
             logger.warning(e)
+            await self.send_msg(room.room_id, str(e))
 
     async def send_msg(self, room, msg, plain=None):
         """wrapper function to handle exceptions cleanly
@@ -510,6 +511,20 @@ class MatrixClient:
 
         logger.debug(f"sent '{msg}' to '{room_id}'")
 
+    async def react_to_event(self, room, event, reaction_text):
+        await self.nio.room_send(
+            room.room_id,
+            message_type="m.reaction",
+            content={
+                "m.relates_to": {
+                    "rel_type": "m.annotation",
+                    "event_id": event.event_id,
+                    "key": reaction_text
+                }
+            },
+            ignore_unverified_devices=False
+        )
+
 
 def markdown_json(msg):
     return "\r\n".join(
@@ -519,3 +534,14 @@ def markdown_json(msg):
 
 def make_pill(user_id):
     return f'<a href="https://matrix.to/#/{user_id}">{user_id}</a>'
+
+
+"""
+from nio import SyncResponse
+
+self.nio.add_response_callback(self._cb_sync, SyncResponse)
+
+async def _cb_sync(self, response: SyncResponse) -> None:
+    # called every time `sync_forever` sucessfully syncs with the server
+    logger.trace(f"synced: {response}")
+"""
