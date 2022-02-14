@@ -1,17 +1,17 @@
 import json
-from urllib.parse import urljoin
 from collections import defaultdict
+from urllib.parse import urljoin
 
-from loguru import logger
-from aiohttp.web import json_response, middleware, post, get
-from aiohttp.web import Application, AppRunner, TCPSite
-from aiohttp.web import HTTPException, HTTPForbidden, HTTPBadRequest
-from aiohttp import BasicAuth
 import zmq.asyncio
+from aiohttp import BasicAuth
+from aiohttp.web import Application, AppRunner, HTTPBadRequest, HTTPException
+from aiohttp.web import HTTPForbidden, TCPSite, get, json_response, middleware
+from aiohttp.web import post
+from loguru import logger
 
+from notflixbot.emojis import FOLDER, MOVIE, OK, PERSON, TV_EPISODE, TV_SEASON
+from notflixbot.emojis import VIDEO, WARNING
 from notflixbot.matrix import markdown_json
-from notflixbot.emojis import TV_EPISODE, TV_SEASON, MOVIE, VIDEO, PERSON
-from notflixbot.emojis import OK, WARNING, FOLDER
 
 
 class Webhook:

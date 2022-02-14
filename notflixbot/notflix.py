@@ -1,12 +1,10 @@
 import json
-
-from urllib.parse import urlparse
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import requests
 from loguru import logger
 
-from notflixbot.errors import ImdbError, TvdbError, NotflixbotError
+from notflixbot.errors import ImdbError, NotflixbotError, TvdbError
 
 
 class Radarr:
@@ -56,7 +54,7 @@ class TheMovieDB:
         r.raise_for_status()
         j = r.json()
 
-        print(json.dumps(j, indent=2))
+        logger.debug(json.dumps(j, indent=2))
 
         info = self.parse_tvdb(j, imdb_id)
         if info is None:

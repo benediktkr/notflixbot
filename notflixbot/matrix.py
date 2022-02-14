@@ -1,28 +1,27 @@
-import aiohttp.client_exceptions
 import asyncio
-import click
 import getpass
 import json
-from urllib.parse import urlparse, parse_qs, urljoin
+from urllib.parse import parse_qs, urljoin, urlparse
 
-from loguru import logger
-from markdown import markdown
-from nio.responses import WhoamiError
-from nio.crypto import TrustState
-from nio.exceptions import OlmUnverifiedDeviceError
-from nio import AsyncClient, AsyncClientConfig, MatrixRoom
-from nio import RoomMessageText, InviteMemberEvent
-from nio import RoomMemberEvent, MegolmEvent
-from nio import LoginError, JoinError, ProfileSetAvatarError
-from nio import RoomResolveAliasError
-import zmq.asyncio
+import aiohttp.client_exceptions
+import click
+
 # TODO: use aiohttp
 import requests
+import zmq.asyncio
+from loguru import logger
+from markdown import markdown
+from nio import AsyncClient, AsyncClientConfig, InviteMemberEvent, JoinError
+from nio import LoginError, MatrixRoom, MegolmEvent, ProfileSetAvatarError
+from nio import RoomMemberEvent, RoomMessageText, RoomResolveAliasError
+from nio.crypto import TrustState
+from nio.exceptions import OlmUnverifiedDeviceError
+from nio.responses import WhoamiError
 
 from notflixbot import version_dict
-from notflixbot.notflix import Notflix
-from notflixbot.errors import NotflixbotError, MatrixError, ImdbError
 from notflixbot.emojis import ROBOT
+from notflixbot.errors import ImdbError, MatrixError, NotflixbotError
+from notflixbot.notflix import Notflix
 
 
 class MatrixClient:

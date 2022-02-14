@@ -1,9 +1,9 @@
-from functools import reduce
-import operator
 import json
+import operator
 import os
-from json.decoder import JSONDecodeError
 import sys
+from functools import reduce
+from json.decoder import JSONDecodeError
 
 from loguru import logger
 

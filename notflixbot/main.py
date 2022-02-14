@@ -2,12 +2,12 @@ import argparse
 import asyncio
 from time import sleep
 
-from loguru import logger
 import zmq.asyncio
 from aiohttp import ClientConnectionError, ServerDisconnectedError
+from loguru import logger
 
-from notflixbot.errors import ConfigError
 from notflixbot.config import Config
+from notflixbot.errors import ConfigError
 from notflixbot.matrix import MatrixClient
 from notflixbot.webhook import Webhook
 
