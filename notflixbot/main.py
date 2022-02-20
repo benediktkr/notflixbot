@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+from asyncio import TimeoutError
 from time import sleep
 
 import zmq.asyncio
@@ -79,8 +80,9 @@ async def async_main(args, config):
 
     except asyncio.CancelledError:
         logger.info("Cancelled")
+        ctx.destroy()
 
-    except (ClientConnectionError, ServerDisconnectedError):
+    except (ClientConnectionError, ServerDisconnectedError, TimeoutError):
         logger.warning("Unable to connect to homeserver, retrying in 15s...")
         sleep(15)
 
