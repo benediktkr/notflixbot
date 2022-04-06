@@ -51,7 +51,7 @@ COPY --from=builder /builder/dist/notflixbot-*.tar.gz /tmp
 RUN python3 -m pip install /tmp/notflixbot-*.tar.gz && \
         rm -v /tmp/notflixbot-*.tar.gz /tmp/requirements.txt
 
-COPY config.json /etc/notflixbot.json
+COPY config-sample.json /etc/notflixbot.json
 
 HEALTHCHECK --start-period=5s --interval=15s --timeout=1s \
         CMD notflixbot -c /etc/notflixbot.json healthcheck
