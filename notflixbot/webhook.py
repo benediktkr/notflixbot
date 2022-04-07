@@ -227,6 +227,10 @@ class Webhook:
             else:
                 text = j['text']
 
+            # send the http response to the client before sending
+            # it with zmq. if the consumer part is dead, the http
+            # request will hang, but the message is on the socket and
+            # is read when we recover from it.
             await self._send(request['room'], text)
             return json_response("ok")
 
