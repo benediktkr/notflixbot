@@ -284,7 +284,8 @@ class MatrixClient:
                                   event: MegolmEvent) -> None:
         red_x_and_lock_emoji = "❌ 🔐"
         logger.warning(f"unable to decrypt message from {event.sender}")
-        self.react_to_event(room.room_id, event.event_id, red_x_and_lock_emoji)
+        await self.react_to_event(room.room_id, event.event_id,
+                                  red_x_and_lock_emoji)
 
     async def _cb_room_member(self, room: MatrixRoom,
                               event: RoomMemberEvent) -> None:
