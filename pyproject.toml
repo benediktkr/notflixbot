@@ -21,6 +21,7 @@ pytest = "^5.2"
 flake8 = "^4.0.1"
 isort = "^5.10.1"
 black = "^22.1.0"
+autopep8 = "^1.6.0"
 
 [tool.poetry.scripts]
 notflixbot = "notflixbot.main:main"

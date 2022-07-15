@@ -267,9 +267,12 @@ class Webhook:
     async def _handle_grafana(self, request):
         j = request['json']
 
+        with open('/home/ben/grafana-json-dump.txt', 'a') as f:
+            f.write(json.dumps(j, indent=2))
+
         state = j['state']
-        name = j['ruleName']
-        u = j['ruleUrl']
+        name = j.get('ruleName', "NO_RULE_NAME")
+        u = j.get('ruleUrl', 'NO_URL')
         if 'message' in j:
             m = f"\n> {j['message']}\n\n"
         else:
@@ -300,10 +303,10 @@ class Webhook:
         else:
             emoji = WARNING
 
-        msg = f"{emoji} grafana: <u>[{name}]({u})</u> {mv} {m}"
-        plain = f"{emoji} {name}"
+        msg = f"{emoji} grafana: <u>[{name}]({u})</u> {mv} {m}" # noqa
+        plain = f"{emoji} {name}"  # noqa
 
-        await self._send(request['room'], msg, plain)
+        # await self._send(request['room'], msg, plain)
 
     async def _handle_jellyfin(self, request):
         """
@@ -336,7 +339,7 @@ class Webhook:
                 prefix = f"{j['SeriesName']} - "
             else:
                 prefix = ""
-            msg = f"{VIDEO} `{user}` is playing [_{prefix}{name}_]({url}) from {device} ({client})" # noqa
+            msg = f"{VIDEO} `{user}` is playing [_{prefix}{name}_]({url}) from {device} ({client})"  # noqa
             plain = msg.replace(
                 "playing _", "playing ").replace("_ from", " from")
             await self._send(request['room'], msg, plain, not_again=True)

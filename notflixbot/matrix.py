@@ -1,6 +1,7 @@
 import asyncio
 import getpass
 import json
+import time
 
 import aiohttp.client_exceptions
 import click
@@ -113,7 +114,17 @@ class MatrixClient:
         blocked and waiting for the first iteration of the sync loop to start
         """
         logger.info("matrix client syncing forever")
-        return await self.nio.sync_forever(timeout=3000, full_state=True)
+        while True:
+            try:
+                return await self.nio.sync_forever(
+                    timeout=3000, full_state=True)
+            except (
+                    asyncio.exceptions.TimeoutError,
+                    aiohttp.client_exceptions.ClientOSError
+            ) as e:
+                logger.error(e)
+                logger.error("timed out, reconnecting after 10s..")
+                time.sleep(10.0)
 
     async def start(self):
         if not self.nio.logged_in:
@@ -302,7 +313,7 @@ class MatrixClient:
         logger.debug(f"got invite to {room.room_id} from {event.sender}")
 
         result = await self.nio.join(room.room_id)
-        if type(result) == JoinError:
+        if isinstance(result, JoinError):
             logger.error(f"error joining room {room.room_id}: {result}.")
         else:
             logger.info(
@@ -398,7 +409,7 @@ class MatrixClient:
 
     async def _handle_crash(self, room, event):
         # CRASH AND BURN
-        return 1/0
+        return 1 / 0
 
     async def _handle_add(self, room, event):
         try:
