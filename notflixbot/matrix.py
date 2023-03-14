@@ -378,6 +378,7 @@ class MatrixClient:
     async def _phrase_respond(self, room, event):
         phrases = {
             'are you alive?': 'no im a `robot`',
+            'are you alive': 'no im a `robot`',
             'i am a robot': 'FILTHY LIES',
             "i'm a robot": 'FILTHY LIES',
             'im a robot': 'FILTHY LIES',
@@ -415,11 +416,15 @@ class MatrixClient:
         try:
             msg = event.body.strip().split(' ')
             url = msg[1].strip()
-            added, item = self.notflix.add_from_imdb_url(url)
-            if added:
+            added_status, item = self.notflix.add_from_imdb_url(url)
+            if added_status == "added":
                 await self.send_msg(
                     room.room_id,
                     f"added: {item['title']} ({item['release_year']})")
+            elif added_status == "exists":
+                await self.send_msg(
+                    room.room_id,
+                    f"already exists: {item['title']} ({item['release_year']})")
             else:
                 try:
                     errmsg = item[0]['errorMessage']

@@ -113,8 +113,13 @@ class Notflix:
             imdb_id = self.get_imdb_id_from_url(imdb_url)
             item = self.tvdb.search_imdb_id(imdb_id)
             status, response = self.radarr.add(item)
-            added = status == 201
-            return (added, item)
+            if status == 201:
+                status = "added"
+            elif status == 400:
+                status = "exists"
+            else:
+                status = "error"
+            return (status, item)
 
             # msg = f"{item['title']} ({item['release_year']})"
             # msg += " | [poster]({item['poster']})"

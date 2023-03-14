@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "notflixbot"
-version = "0.2.0"
+version = "0.2.1"
 description = ""
 authors = ["Benedikt Kristinsson <benedikt@lokun.is>"]
 readme = "README.md"
@@ -26,9 +26,14 @@ autopep8 = "^1.6.0"
 [tool.poetry.scripts]
 notflixbot = "notflixbot.main:main"
 
+[tool.poetry.group.dev.dependencies]
+poetry-bumpversion = "^0.1.0"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry_bumpversion.file."notflixbot/__init__.py"]
 
 [tool.isort]
 skip = [".gitignore", ".dockerignore", ".git", "tests"]
