@@ -12,7 +12,7 @@ class Radarr:
         self._api_key = api_key
         self._base_url = base_url
 
-    def add(self, item):
+    def add(self, item, user="unknown"):
         data = json.dumps({
             'imdbId': item['imdb_id'],
             'TmdbId': item['tmdb_id'],
@@ -21,7 +21,7 @@ class Radarr:
             # 'Path': self.path,
             'RootFolderPath': "/deadspace/video/movies",
             'monitored': True,
-            'addOptions': {'searchForMovie': True}
+            'addOptions': {'searchForMovie': True, tags: ['notflixbot', user]}
 
         }, indent=2)
         r = requests.post(

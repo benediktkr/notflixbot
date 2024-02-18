@@ -1,6 +1,6 @@
 import importlib.metadata
 
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 
 # __version__ = importlib.metadata.version(__name__)
 
