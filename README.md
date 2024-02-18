@@ -137,3 +137,25 @@ optional arguments:
 ```shell
 apt-get install libolm-dev
 ```
+
+
+if this breaks, its because i install -- user pycryptodome
+
+```console
+$ python3 -m pip install --user pycryptodome
+Collecting pycryptodome
+  Downloading pycryptodome-3.18.0-cp35-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 36.9 MB/s eta 0:00:00
+Installing collected packages: pycryptodome
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+matrix-nio 0.19.0 requires aiofiles<0.7.0,>=0.6.0, but you have aiofiles 0.8.0 which is incompatible.
+matrix-nio 0.19.0 requires aiohttp-socks<0.8.0,>=0.7.0, but you have aiohttp-socks 0.5.3 which is incompatible.
+matrix-nio 0.19.0 requires h11<0.13.0,>=0.12.0, but you have h11 0.13.0 which is incompatible.
+matrix-nio 0.19.0 requires jsonschema<4.0.0,>=3.2.0, but you have jsonschema 4.17.3 which is incompatible.
+matrix-nio 0.19.0 requires unpaddedbase64<3.0.0,>=2.1.0, but you have unpaddedbase64 1.1.0 which is incompatible.
+Successfully installed pycryptodome-3.18.0
+
+[notice] A new release of pip available: 22.2.2 -> 23.2
+[notice] To update, run: python3 -m pip install --upgrade pip
+$ python3 -m pip uninstall --user crypto
+```
