@@ -419,7 +419,7 @@ class MatrixClient:
             try:
                 user = event.sender.split(":")[0][1:]
             except IndexError as e:
-                logger.error("error parsing user_id '{event.sender}': {e}")
+                logger.error(f"error parsing user_id '{event.sender}': {e}")
                 user = "unknown"
             added_status, item = self.notflix.add_from_imdb_url(url, user)
             if added_status == "added":

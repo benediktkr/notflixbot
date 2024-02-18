@@ -21,7 +21,7 @@ class Radarr:
             # 'Path': self.path,
             'RootFolderPath': "/deadspace/video/movies",
             'monitored': True,
-            'addOptions': {'searchForMovie': True, tags: ['notflixbot', user]}
+            'addOptions': {'searchForMovie': True, 'tags': ['notflixbot', user]}
 
         }, indent=2)
         r = requests.post(
