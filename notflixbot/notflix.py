@@ -108,11 +108,11 @@ class Notflix:
         else:
             raise ImdbError("not an imdb url")
 
-    def add_from_imdb_url(self, imdb_url):
+    def add_from_imdb_url(self, imdb_url, user="unknown"):
         try:
             imdb_id = self.get_imdb_id_from_url(imdb_url)
             item = self.tvdb.search_imdb_id(imdb_id)
-            status, response = self.radarr.add(item)
+            status, response = self.radarr.add(item, user)
             if status == 201:
                 status = "added"
             elif status == 400:
