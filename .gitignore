@@ -155,3 +155,4 @@ neo_store/
 *_store/
 **/*-old.py
 **/*-old
+.DS_Store
