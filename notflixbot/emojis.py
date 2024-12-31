@@ -10,3 +10,4 @@ FOLDER = "📁 ".strip()
 
 OK = "✅ ".strip()
 WARNING = "🟡  ".strip()
+ERROR = "❌ ".strip()

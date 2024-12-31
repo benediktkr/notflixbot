@@ -16,7 +16,7 @@ from nio.exceptions import OlmUnverifiedDeviceError
 from nio.responses import WhoamiError
 
 from notflixbot import version_dict
-from notflixbot.emojis import ROBOT
+from notflixbot.emojis import ROBOT, ERROR
 from notflixbot.errors import ImdbError, MatrixError, NotflixbotError
 from notflixbot.notflix import Notflix
 from notflixbot.youtube import Youtube
@@ -75,9 +75,9 @@ class MatrixClient:
     async def close(self):
         if self.nio.logged_in:
             if self._default_room is not None:
-                await self.send_msg(self._default_room, "❌ Shutting down")
+                await self.send_msg(self._default_room, f"{ERROR} Shutting down")
         await self.nio.close()
-        logger.info("Exited.")
+        logger.info("Closed nio client")
 
     async def restore_login(self):
         if self.config.creds is not None:
@@ -416,7 +416,7 @@ class MatrixClient:
             return item
         except IndexError:
             logger.error(f"Invalid msg from {event.sender}: '{event.body}'")
-            self.send_msg(room.room_id, "url is missing")
+            self.send_msg(room.room_id, "Url is missing")
         except (NotflixbotError, ImdbError) as e:
             logger.warning(e)
             await self.send_msg(room.room_id, str(e))
