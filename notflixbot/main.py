@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 from asyncio import TimeoutError
+from asyncio.exceptions import CancelledError
 from time import sleep
 
 import zmq.asyncio
@@ -45,8 +46,8 @@ def get_parser():
 async def async_main(args, config):
     logger.info(f"{version_dict['name']} {version_dict['version']}")
 
+    ctx = zmq.asyncio.Context()
     try:
-        ctx = zmq.asyncio.Context()
         webhook = Webhook(config, ctx)
 
         if args.subcmd == "webhook":
@@ -78,7 +79,7 @@ async def async_main(args, config):
                     await matrix.nio.room_forget(room_id)
                     logger.info(f"forgot room {args.forget_room}")
 
-    except asyncio.CancelledError:
+    except CancelledError:
         logger.info("Cancelled")
         ctx.destroy()
 

@@ -77,7 +77,6 @@ class MatrixClient:
             if self._default_room is not None:
                 await self.send_msg(self._default_room, "❌ shutting down")
         await self.nio.close()
-        await self._socket.close()
         logger.info("exited.")
 
     async def restore_login(self):
