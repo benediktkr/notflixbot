@@ -4,7 +4,7 @@ import requests
 from loguru import logger
 
 
-def healthcheck(host, port):
+def healthcheck(host, port, quiet=False):
     if host == "0.0.0.0":
         host = "127.0.0.1"
 
@@ -18,6 +18,8 @@ def healthcheck(host, port):
         sys.exit(1)
 
     if j['ruok'] == "iamok" and r.status_code == 200:
+        if not quiet:
+            logger.success(f"Webhook: {j['ruok']}")
         sys.exit(0)
     else:
         sys.exit(1)

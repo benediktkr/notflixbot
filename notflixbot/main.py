@@ -32,11 +32,10 @@ def get_parser():
     subparser.add_parser("start", help="start matrix bot")
     subparser.add_parser("restore_login", help="start new matrix session")
     subparser.add_parser("webhook", help="start webhook http server")
-    subparser.add_parser("healthcheck", help="run healthcheck on http server")
-    nio_parser = subparser.add_parser("nio",
-                                      help="low-level stuff, helpful for dev")
-    nio_parser.add_argument("--forget-room", type=str, required=True,
-                            help="canonical_alias or room_id")
+    healthcheck_parser = subparser.add_parser("healthcheck", help="run healthcheck on http server")
+    healthcheck_parser.add_argument("--quiet", action="store_true")
+    nio_parser = subparser.add_parser("nio", help="low-level stuff, helpful for dev")
+    nio_parser.add_argument("--forget-room", type=str, required=True, help="canonical_alias or room_id")
 
     return parser
 
@@ -98,7 +97,7 @@ def main():
         raise SystemExit(2) from e
 
     if args.subcmd == "healthcheck":
-        return healthcheck(config.webhook_host, config.webhook_port)
+        return healthcheck(config.webhook_host, config.webhook_port, args.quiet)
 
     while True:
         try:
