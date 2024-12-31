@@ -283,7 +283,7 @@ class MatrixClient:
     async def _cb_decryption_fail(self, room: MatrixRoom, event: MegolmEvent) -> None:
         red_x_and_lock_emoji = "❌ 🔐"
         logger.warning(f"Unable to decrypt message from {event.sender}")
-        await self.react_to_event(room, event.event_id, red_x_and_lock_emoji)
+        await self.react_to_event(room, event, red_x_and_lock_emoji)
 
     async def _cb_room_member(self, room: MatrixRoom, event: RoomMemberEvent) -> None:
         if event.content['membership'] == "join":
