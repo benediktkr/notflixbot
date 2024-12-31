@@ -39,7 +39,7 @@ def get_parser():
 @logger.catch
 @MatrixClient.catch
 async def async_main(args, config):
-    logger.info(f"{version_dict['name']} {version_dict['version']}")
+    logger.success(f"{version_dict['name']} {version_dict['version']}")
 
     ctx = zmq.asyncio.Context()
     try:
