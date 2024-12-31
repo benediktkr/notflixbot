@@ -115,12 +115,8 @@ class MatrixClient:
         logger.info("matrix client syncing forever")
         while True:
             try:
-                return await self.nio.sync_forever(
-                    timeout=3000, full_state=True)
-            except (
-                    asyncio.exceptions.TimeoutError,
-                    aiohttp.client_exceptions.ClientOSError
-            ) as e:
+                return await self.nio.sync_forever(timeout=3000, full_state=True)
+            except (asyncio.exceptions.TimeoutError, aiohttp.client_exceptions.ClientOSError) as e:
                 logger.error(e)
                 logger.error("timed out, reconnecting after 10s..")
                 time.sleep(10.0)
@@ -222,8 +218,7 @@ class MatrixClient:
         self.cmd_handlers['!crash'] = self._handle_crash
 
     def _callbacks(self):
-        self.nio.add_event_callback(
-            self._cb_invite_filtered, (InviteMemberEvent,))
+        self.nio.add_event_callback(self._cb_invite_filtered, (InviteMemberEvent,))
         self.nio.add_event_callback(self._cb_message, (RoomMessageText,))
         self.nio.add_event_callback(self._cb_room_member, (RoomMemberEvent,))
         self.nio.add_event_callback(self._cb_decryption_fail, (MegolmEvent,))
@@ -256,10 +251,7 @@ class MatrixClient:
 
     async def _login(self, passwd):
         try:
-            resp = await self.nio.login(
-                passwd,
-                device_name=self.config.device_name
-            )
+            resp = await self.nio.login(passwd, device_name=self.config.device_name)
             if isinstance(resp, LoginError):
                 logger.error(f"failed to login: '{resp.message}'")
                 raise MatrixError(resp.message)
@@ -295,16 +287,14 @@ class MatrixClient:
         logger.warning(f"unable to decrypt message from {event.sender}")
         await self.react_to_event(room, event.event_id, red_x_and_lock_emoji)
 
-    async def _cb_room_member(self, room: MatrixRoom,
-                              event: RoomMemberEvent) -> None:
+    async def _cb_room_member(self, room: MatrixRoom, event: RoomMemberEvent) -> None:
         if event.content['membership'] == "join":
             if event.state_key == self.nio.user_id:
                 # we joined a room
                 logger.debug("room member event")
                 await self._trust_all_users_in_room(room.room_id)
 
-    async def _cb_invite(self, room: MatrixRoom,
-                         event: InviteMemberEvent) -> None:
+    async def _cb_invite(self, room: MatrixRoom, event: InviteMemberEvent) -> None:
         """for when an invite is received, join the room specified in the invite
         """
         logger.debug(f"got invite to {room.room_id} from {event.sender}")
@@ -316,8 +306,7 @@ class MatrixClient:
             logger.info(
                 f"joined {room.canonical_alias} invited by {event.sender}")
 
-    async def _cb_invite_filtered(self, room: MatrixRoom,
-                                  event: InviteMemberEvent) -> None:
+    async def _cb_invite_filtered(self, room: MatrixRoom, event: InviteMemberEvent) -> None:
         """InviteMemberEvent is fired for every m.room.member state received
         in a sync response's `rooms.invite` section. so we will get
         some that are not our own invite events (f.ex. inviter's
@@ -332,8 +321,7 @@ class MatrixClient:
         else:
             logger.debug(f"ignoring invite event: {event}")
 
-    async def _cb_message(self, room: MatrixRoom,
-                          event: RoomMessageText) -> None:
+    async def _cb_message(self, room: MatrixRoom, event: RoomMessageText) -> None:
 
         # ignore messages from ourselves
         if event.sender == self.nio.user_id:
