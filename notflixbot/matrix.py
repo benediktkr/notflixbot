@@ -291,12 +291,10 @@ class MatrixClient:
                 else:
                     logger.debug(f"already trust {dev_id} from user {user_id}")
 
-    async def _cb_decryption_fail(self, room: MatrixRoom,
-                                  event: MegolmEvent) -> None:
+    async def _cb_decryption_fail(self, room: MatrixRoom, event: MegolmEvent) -> None:
         red_x_and_lock_emoji = "❌ 🔐"
         logger.warning(f"unable to decrypt message from {event.sender}")
-        await self.react_to_event(room.room_id, event.event_id,
-                                  red_x_and_lock_emoji)
+        await self.react_to_event(room, event.event_id, red_x_and_lock_emoji)
 
     async def _cb_room_member(self, room: MatrixRoom,
                               event: RoomMemberEvent) -> None:
