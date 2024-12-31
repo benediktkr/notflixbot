@@ -16,7 +16,7 @@ from nio.exceptions import OlmUnverifiedDeviceError
 from nio.responses import WhoamiError
 
 from notflixbot import version_dict
-from notflixbot.emojis import ROBOT, ERROR
+from notflixbot.emojis import ERROR, ROBOT
 from notflixbot.errors import ImdbError, MatrixError, NotflixbotError
 from notflixbot.notflix import Notflix
 from notflixbot.youtube import Youtube
