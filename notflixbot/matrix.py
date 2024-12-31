@@ -102,7 +102,7 @@ class MatrixClient:
             # whoami.message ("Invalid macaroon passed.")
             raise MatrixError(whoami)
         else:
-            logger.info(f"Matrix bot user_id: '{self.nio.user_id}'")
+            logger.info(f"Matrix bot user_id: {self.nio.user_id}")
 
     async def sync_forever(self):
         """This starts the event loop, and does the first sync, which

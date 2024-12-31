@@ -1,5 +1,4 @@
-# notflixbot
-
+# `notflixbot`
 
 [![Build Status](https://jenkins.sudo.is/buildStatus/icon?job=ben%2Fnotflixbot%2Fmain&style=flat-square)](https://jenkins.sudo.is/job/ben/job/notflixbot/job/main/)
 ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/benediktkr/notflixbot?sort=semver&style=flat-square)
@@ -7,32 +6,32 @@
 
 ![](neo.jpeg)
 
-a general purpose matrix bot for
-[matrix.sudo.is](https://matrix.sudo.is), trying to be extensible.
+A general purpose matrix bot for [`matrix.sudo.is`](https://matrix.sudo.is),
+trying to be extensible.
 
-## features
+## Features
 
- * matrix bot based on [matrix-nio](https://github.com/poljar/matrix-nio)
- * show youtube titles and link to invidous
- * add a movie to [radarr](https://github.com/Radarr/Radarr) from imdb link with `!add`
- * webhooks listener. handles radarr, sonarr, grafana, [jellyfin](https://github.com/jellyfin/jellyfin-plugin-webhook), slack and custom webhooks
- * uses a zeromq `PAIR` socket over inproc transport between webhooks and bot
+ * Matrix bot based on [matrix-nio](https://github.com/poljar/matrix-nio)
+ * Unfurls YouTube titles and links to Invidous
+ * Add a movie to [Radarr](https://github.com/Radarr/Radarr) from IMDB link with `!add`
+ * Webhooks listener. Handles Radarr, Sonarr, Grafana, [Jellyfin](https://github.com/jellyfin/jellyfin-plugin-webhook), Slack and custom webhooks
+ * Uses a ZeroMQ `PAIR` socket over `inproc://` transport between webhooks and Matrix client
 
-## usage
+## Usage
 
-the bot answers to the following commands by default:
+The bot answers to the following commands by default:
 
- * `!add`: usage: `!add $IMDB_URL`
- * `!ruok`: check if the bot is ok
- * `!whoami`: show your user id
- * `!key_sync`: force a key sync (experimental)
- * `!help`: show help
+ * `!add ${IMDB_URL}`: Add a movie to Radarr
+ * `!ruok`: Check if the bot is OK
+ * `!whoami`: Show your `user_id`.
+ * `!key_sync`: Force a key sync (experimental)
+ * `!help`: Show help
 
-## configuration
+## Configuration
 
-please see [config-sample.json](config-sample.json).
+Please see [`config-sample.json`](config-sample.json).
 
-by default the webhooks will listen on `localhost:3000`, but you can change it by setting
+To configure where the webhook server listens:
 
 ```json
 "webhook": {
@@ -41,74 +40,73 @@ by default the webhooks will listen on `localhost:3000`, but you can change it b
   }
 ```
 
-in the config file
+By default the webhook server listens on `localhost:3000`.
 
-## running the bot
+## Running the bot
 
 ```shell
-usage: notflixbot [-h] [-c CONFIG] [-d] subcmd ...
+usage: notflixbot [-h] [-d] [-c CONFIG] subcmd ...
 
 positional arguments:
   subcmd
-    start               start matrix bot
-    restore_login       start new matrix session
-    webhook             start webhook http server
-    nio                 low-level stuff, helpful for dev
+    start               Start Matrix bot and webhook HTTP server
+    restore_login       Start a new Matrix session
+    webhook             Start webhook HTTP server
+    Healthcheck         Run healthcheck for webhook HTTP server
+    nio                 Low-level stuff, helpful for dev
 
 optional arguments:
   -h, --help            show this help message and exit
+  -d, --debug           Enable debug output and logging (default: False)
   -c CONFIG, --config CONFIG
-                        path to config file (default: /etc/config.json)
-  -d, --debug           print debug output (default: False)
+                        Path to config file (default: /etc/notflixbot.json)
 ```
 
+### Start the bot
 
-### start the bot
+The simplest way to start the bot, will use the default configfile `/etc/notflixbot.json`:
 
-simplest way to start the bot, will use the default configfile `/etc/notflixbot.json`:
-
-```shell
+```console
 $ notflixbot start
-notflixbot 0.1.2
-matrix bot running as @notflixbot:example.com
-matrix client syncing forever
-polling zmq socket
-webhook listening on http://127.0.0.1:3033
+notflixbot 0.3.0
+Matrix bot user_id: @notflixbot:example.com
+Matrix client syncing forever
+Polling ZMQ socket for webhook messages
+Webhook server listening on: http://127.0.0.1:3033
 ```
 
-you can use the `-c` flag to specify a path to a different config file:
+You can use the `-c` flag to specify a path to a different config file:
 
 ```shell
 notflixbot -c /path/to/a/different/config.json
 ```
 
-### docker
+### Docker
 
-you can also use docker (build from `Dockerfile` or use pre-built image):
+You can also use docker (build from `Dockerfile` or use pre-built image):
 
 ```shell
 mkdir ${PWD}/data
 docker run --name notflixbot --rm -v ${PWD}/data:/data -v ${PWD}/config.json:/etc/config.json benediktkr/notflixbot:latest
 ```
 
-make sure to configure `credentials_path` and `storage_path` to be
+Make sure to configure `credentials_path` and `storage_path` to be
 somewhere persisent, for example in `/data` in this example.
 
-### logging in
+### Logging in
 
-your config has to set `credentials_path` to a path to a file that the
+Your config has to set `credentials_path` to a path to a file that the
 bot can read and write, that will store the credentials (access token,
 device id and user id) for the bot.
 
-log in and create the file with:
+Log in and create the file with:
 
-```shell
+```console
 $ notflixbot restore_login -c config.json
 Password:
 ```
 
-
-you can also create the file if you have an access token and device_id
+You can also create the file if you have an access token and device_id
 handy:
 
 ```json
@@ -120,7 +118,7 @@ handy:
 ```
 
 
-### nio shorthand commands:
+### `nio` shorthand commands:
 
 ```
 usage: notflixbot nio [-h] --forget-room FORGET_ROOM
@@ -131,13 +129,11 @@ optional arguments:
                         canonical_alias or room_id
 ```
 
-
-## install libolm depdenency
+## Install libolm depdenency
 
 ```shell
 apt-get install libolm-dev
 ```
-
 
 if this breaks, its because i install -- user pycryptodome
 

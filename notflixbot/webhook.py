@@ -420,4 +420,4 @@ class Webhook:
         await runner.setup()
         site = TCPSite(runner, self.host, self.port)
         await site.start()
-        logger.info(f'webhook listening on http://{self.host}:{self.port}')
+        logger.info(f'Webhook server listening on: http://{self.host}:{self.port}')
