@@ -111,9 +111,9 @@ class MatrixClient:
         But we cant call `self._after_first_sync` here because then it is
         blocked and waiting for the first iteration of the sync loop to start
         """
-        logger.info("Matrix client syncing forever")
         while True:
             try:
+                logger.info("Matrix client syncing forever")
                 return await self.nio.sync_forever(timeout=3000, full_state=True)
             except (asyncio.exceptions.TimeoutError, aiohttp.client_exceptions.ClientOSError) as e:
                 logger.error(e)
@@ -383,8 +383,7 @@ class MatrixClient:
     async def _handle_whoami(self, room, event):
         your_id = event.sender
         my_id = self.config.creds.user_id
-        await self.send_msg(
-            room.room_id, f"I am: `{my_id}` and you are: `{your_id}`")
+        await self.send_msg(room.room_id, f"- I am: `{my_id}`\n- You are: `{your_id}`")
 
     async def _handle_ruok(self, room, event):
         await self.send_msg(room.room_id, "`iamok`")
