@@ -15,7 +15,6 @@ from notflixbot.matrix import markdown_json
 
 
 class Webhook:
-
     def __init__(self, config, ctx):
         self.host = config.webhook_host
         self.port = config.webhook_port
@@ -139,12 +138,11 @@ class Webhook:
 
     @middleware
     async def _middleware_auth(self, request, handler):
-        """ways of authenticating:
-        1. basic auth in Authorization header (username ignored)
-        2. token in Webhook-Token header
-        3. a 'token' key in json payload
-        4. in the url /path/webhook/{token}
-             (needs a rooute in _add_routes to work)
+        """Ways of authenticating:
+        1. Basic auth in Authorization header (username ignored)
+        2. Token in Webhook-Token header
+        3. A 'token' key in json payload
+        4. In the url /path/webhook/{token} (needs a rooute in _add_routes to work)
 
         """
 
@@ -178,7 +176,7 @@ class Webhook:
         return response
 
     def _validate_token(self, token):
-        """returns a room_alias or room_id to post messages to
+        """Returns a room_alias or room_id to post messages to
         rasies a HTTPForbidden if token is not valid
         """
         try:
@@ -207,7 +205,7 @@ class Webhook:
         j_body = request['json']['body']
 
         if j_body.startswith("Test Notification from transport"):
-            msg = f"{OK} authentik webhook test"
+            msg = f"{OK} Authentik webhook test"
             plain = msg
 
         else:
@@ -218,7 +216,7 @@ class Webhook:
         return json_response("ok")
 
     async def _handle_incoming(self, request):
-        """following the slack webhook request format
+        """Following the slack webhook request format
         """
         try:
             j = request['json']
@@ -265,7 +263,7 @@ class Webhook:
 
     async def _handle_grafana(self, request):
         j = request['json']
-        print(json.dumps(j, indent=2))
+        logger.info("Grafana: {json.dumps(j, indent=2)}")
         with open('/home/ben/grafana-json-dump.txt', 'a') as f:
             f.write(json.dumps(j, indent=2))
 
@@ -356,6 +354,7 @@ class Webhook:
 
             msg = f"{PERSON} user creted: `{user}`"
             await self._send(request['room'], msg)
+
         elif notification_type == "ItemAdded" and j['ItemType'] == "Movie":
             host = j['ServerUrl']
             itemid = j['ItemId']

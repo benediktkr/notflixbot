@@ -17,25 +17,21 @@ from notflixbot.webhook import Webhook
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     subparser = parser.add_subparsers(dest='subcmd', metavar='subcmd')
     subparser.required = True
 
-    parser.add_argument("-d", "--debug", action="store_true",
-                        help="print debug output")
-    parser.add_argument("-c", "--config",
-                        help="path to config file",
-                        default="/etc/notflixbot.json")
+    parser.add_argument("-d", "--debug", action="store_true", help="Enable debug output and logging")
+    parser.add_argument("-c", "--config", help="Path to config file", default="/etc/notflixbot.json")
 
-    subparser.add_parser("start", help="start matrix bot")
-    subparser.add_parser("restore_login", help="start new matrix session")
-    subparser.add_parser("webhook", help="start webhook http server")
-    healthcheck_parser = subparser.add_parser("healthcheck", help="run healthcheck on http server")
+    subparser.add_parser("start", help="Start Matrix bot and webhook HTTP server")
+    subparser.add_parser("restore_login", help="Start a new Matrix session")
+    subparser.add_parser("webhook", help="Start webhook HTTP server")
+    healthcheck_parser = subparser.add_parser("Healthcheck", help="Run healthcheck for webhook HTTP server")
     healthcheck_parser.add_argument("--quiet", action="store_true")
-    nio_parser = subparser.add_parser("nio", help="low-level stuff, helpful for dev")
-    nio_parser.add_argument("--forget-room", type=str, required=True, help="canonical_alias or room_id")
+    nio_parser = subparser.add_parser("nio", help="Low-level stuff, helpful for dev")
+    nio_parser.add_argument("--forget-room", type=str, required=True, help="The canonical_alias or room_id of a room to forget")
 
     return parser
 
@@ -76,7 +72,7 @@ async def async_main(args, config):
                     room_id = await matrix._room_id(args.forget_room)
                     await matrix.nio.room_leave(room_id)
                     await matrix.nio.room_forget(room_id)
-                    logger.info(f"forgot room {args.forget_room}")
+                    logger.info(f"Forgot room {args.forget_room}")
 
     except CancelledError:
         logger.info("Cancelled")
@@ -110,5 +106,5 @@ def main():
         except Exception as e:
             # staying alive!
             logger.exception(e)
+            logger.warning("Reconnecting..")
             sleep(4.20)
-            logger.info("TEST")

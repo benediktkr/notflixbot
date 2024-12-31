@@ -33,7 +33,7 @@ class MatrixClient:
                 logger.error(e)
                 raise SystemExit(2)
             except click.exceptions.Abort:
-                logger.warning("user aborted")
+                logger.warning("User aborted")
                 raise SystemExit(1)
 
         return inner
@@ -46,10 +46,10 @@ class MatrixClient:
         self.admin_room_ids = list()
         try:
             self._default_room = self.config.rooms[0]
-            logger.info(f"default room: {self._default_room}")
+            logger.info(f"Default room: {self._default_room}")
         except KeyError:
             self._default_room = None
-            logger.warning("no rooms in config, default_room not set")
+            logger.warning("Do rooms in config, 'default_room' not set")
 
         self._context = ctx
         self._socket = self._context.socket(zmq.PAIR)
@@ -75,26 +75,25 @@ class MatrixClient:
     async def close(self):
         if self.nio.logged_in:
             if self._default_room is not None:
-                await self.send_msg(self._default_room, "❌ shutting down")
+                await self.send_msg(self._default_room, "❌ Shutting down")
         await self.nio.close()
-        logger.info("exited.")
+        logger.info("Exited.")
 
     async def restore_login(self):
         if self.config.creds is not None:
-            logger.warning(f"file exists: '{self.config.credentials_path}'")
-            if not click.confirm("overwrite?"):
-                logger.info("doig nothing and exiting")
+            logger.warning(f"File exists: '{self.config.credentials_path}'")
+            if not click.confirm("Overwrite?"):
+                logger.info("Doing nothing and exiting")
                 raise SystemExit(1)
         passwd = getpass.getpass()
         return await self._login(passwd)
 
     async def auth(self):
         if self.config.creds is None:
-            logger.error(
-                "no stored credentials found, please run with --restore-login")
+            logger.error("No stored credentials found, please run with '--restore-login'")
             raise SystemExit
 
-        logger.debug(f"connecting to '{self.config.homeserver}'")
+        logger.debug(f"Connecting to: '{self.config.homeserver}'")
         await self._set_creds()
 
         whoami = await self.nio.whoami()
@@ -103,22 +102,22 @@ class MatrixClient:
             # whoami.message ("Invalid macaroon passed.")
             raise MatrixError(whoami)
         else:
-            logger.info(f"matrix bot running as {self.nio.user_id}")
+            logger.info(f"Matrix bot user_id: '{self.nio.user_id}'")
 
     async def sync_forever(self):
-        """this starts the event loop, and does the first sync, which
-        unblocks self._after_first_sync.
+        """This starts the event loop, and does the first sync, which
+        unblocks `self._after_first_sync`.
 
-        but we cant call self._after_first_sync here because then it is
+        But we cant call `self._after_first_sync` here because then it is
         blocked and waiting for the first iteration of the sync loop to start
         """
-        logger.info("matrix client syncing forever")
+        logger.info("Matrix client syncing forever")
         while True:
             try:
                 return await self.nio.sync_forever(timeout=3000, full_state=True)
             except (asyncio.exceptions.TimeoutError, aiohttp.client_exceptions.ClientOSError) as e:
                 logger.error(e)
-                logger.error("timed out, reconnecting after 10s..")
+                logger.error("Timed out, reconnecting after 10s..")
                 time.sleep(10.0)
 
     async def start(self):
@@ -135,7 +134,7 @@ class MatrixClient:
             ))
 
     async def webhook_poller(self):
-        logger.info("polling zmq socket")
+        logger.info("Polling ZMQ socket for webhook messages")
         while True:
             # keyboard interrupt?
             events = await self._poller.poll(3000)
@@ -157,7 +156,7 @@ class MatrixClient:
 
         room = await self.nio.room_resolve_alias(room_addr)
         if isinstance(room, RoomResolveAliasError):
-            raise MatrixError(f"cannot resolve: '{room_addr}'")
+            raise MatrixError(f"Cannot resolve room: '{room_addr}'")
 
         return room.room_id
 
@@ -181,7 +180,7 @@ class MatrixClient:
             await self.send_msg(self._default_room, msg)
 
         await self._key_sync()
-        logger.debug("first sync is done")
+        logger.debug("First sync is done.")
 
     async def _set_creds(self):
         self.nio.user_id = self.config.creds.user_id
@@ -200,9 +199,9 @@ class MatrixClient:
         avatar = await self.nio.set_avatar(self.config.avatar)
 
         if isinstance(avatar, ProfileSetAvatarError):
-            logger.warning(f"error setting avatar: {avatar}")
+            logger.warning(f"Error setting avatar: {avatar}")
         else:
-            logger.debug("set avatar")
+            logger.debug("Set avatar")
 
     def _cmd_handlers(self):
         self.cmd_handlers['!add'] = self._handle_add
@@ -226,15 +225,14 @@ class MatrixClient:
     async def _key_sync(self, room=None, event=None):
         if self.nio.should_upload_keys:
             resp_upload = await self.nio.keys_upload()
-            logger.info(f"uploaded keys: {resp_upload}")
+            logger.info(f"Uploaded keys: {resp_upload}")
             if room is not None:
                 await self.send_msg(room.room_id, resp_upload)
 
         if self.nio.should_query_keys:
-            logger.warning(
-                f"should query keys for: {self.nio.users_for_key_query}")
+            logger.warning(f"Should query keys for: {self.nio.users_for_key_query}")
             resp_query = await self.nio.keys_query()
-            logger.info(f"queried for keys: {resp_query}")
+            logger.info(f"Queried for keys: {resp_query}")
             if room is not None:
                 await self.send_msg(room.room_id, resp_query)
 
@@ -242,7 +240,7 @@ class MatrixClient:
             # for user in self.nio.get_users_for_key_claiming():
             # resp_claim = await self.nio.keys_claim(user) # noqa
             resp_claim = await self.nio.keys_claim()
-            logger.warning("claimed keys: '{resp_claim}'")
+            logger.warning("Claimed keys: '{resp_claim}'")
             if room is not None:
                 await self.send_msg(room.room_id, resp_claim)
 
@@ -253,7 +251,7 @@ class MatrixClient:
         try:
             resp = await self.nio.login(passwd, device_name=self.config.device_name)
             if isinstance(resp, LoginError):
-                logger.error(f"failed to login: '{resp.message}'")
+                logger.error(f"Failed to login: '{resp.message}'")
                 raise MatrixError(resp.message)
 
             creds = {
@@ -278,33 +276,32 @@ class MatrixClient:
             for dev_id, olm_device in self.nio.device_store[user_id].items():
                 if olm_device.trust_state != TrustState.verified:
                     self.nio.verify_device(olm_device)
-                    logger.info(f"trusting {dev_id} from user {user_id}")
+                    logger.info(f"Trusting {dev_id} from user {user_id}")
                 else:
-                    logger.debug(f"already trust {dev_id} from user {user_id}")
+                    logger.debug(f"Already trust {dev_id} from user {user_id}")
 
     async def _cb_decryption_fail(self, room: MatrixRoom, event: MegolmEvent) -> None:
         red_x_and_lock_emoji = "❌ 🔐"
-        logger.warning(f"unable to decrypt message from {event.sender}")
+        logger.warning(f"Unable to decrypt message from {event.sender}")
         await self.react_to_event(room, event.event_id, red_x_and_lock_emoji)
 
     async def _cb_room_member(self, room: MatrixRoom, event: RoomMemberEvent) -> None:
         if event.content['membership'] == "join":
             if event.state_key == self.nio.user_id:
                 # we joined a room
-                logger.debug("room member event")
+                logger.debug("Room member event")
                 await self._trust_all_users_in_room(room.room_id)
 
     async def _cb_invite(self, room: MatrixRoom, event: InviteMemberEvent) -> None:
-        """for when an invite is received, join the room specified in the invite
+        """When an invite is received, join the room specified in the invite
         """
-        logger.debug(f"got invite to {room.room_id} from {event.sender}")
+        logger.debug(f"Got invite to {room.room_id} from {event.sender}")
 
         result = await self.nio.join(room.room_id)
         if isinstance(result, JoinError):
-            logger.error(f"error joining room {room.room_id}: {result}.")
+            logger.error(f"Error joining room {room.room_id}: {result}.")
         else:
-            logger.info(
-                f"joined {room.canonical_alias} invited by {event.sender}")
+            logger.info(f"Joined {room.canonical_alias} invited by {event.sender}")
 
     async def _cb_invite_filtered(self, room: MatrixRoom, event: InviteMemberEvent) -> None:
         """InviteMemberEvent is fired for every m.room.member state received
@@ -312,14 +309,14 @@ class MatrixClient:
         some that are not our own invite events (f.ex. inviter's
         membership).
 
-        this ignores them and calls Callbacks.invite
-        with our own invite events.
+        This ignores them and calls Callbacks.invite with our own invite
+        events.
 
         """
         if event.state_key == self.nio.user_id:
             await self._cb_invite(room, event)
         else:
-            logger.debug(f"ignoring invite event: {event}")
+            logger.debug(f"Ignoring invite event: {event}")
 
     async def _cb_message(self, room: MatrixRoom, event: RoomMessageText) -> None:
 
@@ -345,8 +342,7 @@ class MatrixClient:
 
         if prefix in self.cmd_handlers:
             if room_id not in self.admin_room_ids:
-                logger.warning(
-                    f"ignored cmd '{msg}' by {user_id} in {room_alias}")
+                logger.warning(f"Ignored cmd '{msg}' from '{user_id}' in '{room_alias}'")
             else:
                 handler_func = self.cmd_handlers[prefix]
                 await handler_func(room, event)
@@ -388,7 +384,7 @@ class MatrixClient:
         your_id = event.sender
         my_id = self.config.creds.user_id
         await self.send_msg(
-            room.room_id, f"i am: `{my_id}` and you are: `{your_id}`")
+            room.room_id, f"I am: `{my_id}` and you are: `{your_id}`")
 
     async def _handle_ruok(self, room, event):
         await self.send_msg(room.room_id, "`iamok`")
@@ -404,17 +400,13 @@ class MatrixClient:
             try:
                 user = event.sender.split(":")[0][1:]
             except IndexError as e:
-                logger.error(f"error parsing user_id '{event.sender}': {e}")
+                logger.error(f"Error parsing user_id '{event.sender}': {e}")
                 user = "unknown"
             added_status, item = self.notflix.add_from_imdb_url(url, user)
             if added_status == "added":
-                await self.send_msg(
-                    room.room_id,
-                    f"added: {item['title']} ({item['release_year']})")
+                await self.send_msg(room.room_id, f"Added: {item['title']} ({item['release_year']})")
             elif added_status == "exists":
-                await self.send_msg(
-                    room.room_id,
-                    f"already exists: {item['title']} ({item['release_year']})")
+                await self.send_msg(room.room_id, f"Already exists: {item['title']} ({item['release_year']})")
             else:
                 try:
                     errmsg = item[0]['errorMessage']
@@ -424,14 +416,14 @@ class MatrixClient:
 
             return item
         except IndexError:
-            logger.error(f"invalid msg from {event.sender}: '{event.body}'")
+            logger.error(f"Invalid msg from {event.sender}: '{event.body}'")
             self.send_msg(room.room_id, "url is missing")
         except (NotflixbotError, ImdbError) as e:
             logger.warning(e)
             await self.send_msg(room.room_id, str(e))
 
     async def send_msg(self, room, msg, plain=None):
-        """wrapper function to handle exceptions cleanly
+        """Wrapper function to handle exceptions cleanly
         """
 
         try:
