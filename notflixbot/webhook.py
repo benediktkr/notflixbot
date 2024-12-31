@@ -247,10 +247,9 @@ class Webhook:
 
         event_type = request['json']['eventType'].lower()
         if event_type == "test":
-            msg = f"{OK} radarr webhook test"
+            msg = f"{OK} Radarr webhook test"
             logger.success(f"{msg} for {request['room']}")
             await self._send(request['room'], msg)
-            return True
 
         if event_type == "download":
             movie = request['json']['movie']
