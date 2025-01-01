@@ -263,7 +263,7 @@ class Webhook:
 
     async def _handle_grafana(self, request):
         j = request['json']
-        logger.info("Grafana: {json.dumps(j, indent=2)}")
+        logger.info(f"Grafana: {json.dumps(j, indent=2)}")
         with open('/home/ben/grafana-json-dump.txt', 'a') as f:
             f.write(json.dumps(j, indent=2))
 
