@@ -5,7 +5,7 @@
 [![git](https://www.sudo.is/readmes/git.sudo.is-ben.svg)](https://git.sudo.is/ben/notflixbot)
 [![github](https://www.sudo.is/readmes/github-benediktkr.svg)](https://github.com/benediktkr/notflixbot)
 [![codeberg](https://www.sudo.is/readmes/codeberg.svg)](https://codeberg.org/benk/notflixbot)
-[![BSD-2-Clause](https://www.sudo.is/readmes/license-BSD-blue.svg)](LICENSE)
+[![BSD-2-Clause](https://www.sudo.is/readmes/license-BSD-blue.svg)](LICENSE.txt)
 [![docs](https://www.sudo.is/readmes/docs.svg)](https://www.sudo.is/docs)
 [![matrix](https://www.sudo.is/readmes/matrix-ben-sudo.is.svg)](https://matrix.to/#/@ben:sudo.is)
 
