@@ -7,14 +7,14 @@ readme = "README.md"
 repository = "https://git.sudo.is/ben/notflixbot"
 
 [tool.poetry.dependencies]
-python = "^3.9"
-matrix-nio = {extras = ["e2e"], version = "^0.18.7"}
-loguru = "^0.5.3"
-click = "^8.0.3"
-Markdown = "^3.3.6"
-aiohttp = "^3.8.1"
-zmq = "^0.0.0"
-requests = "^2.27.1"
+python = ">=3.9"
+matrix-nio = {extras = ["e2e"], version = "^0.25.2"}
+loguru = "^0.7.3"
+click = "^8.2.0"
+Markdown = "^3.8"
+aiohttp = "^3.11.18"
+pyzmq = "^26.4.0"
+requests = "^2.32.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
