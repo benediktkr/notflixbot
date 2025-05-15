@@ -35,6 +35,9 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry_bumpversion.file."notflixbot/__init__.py"]
 
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
+
 [tool.isort]
 skip = [".gitignore", ".dockerignore", ".git", "tests"]
 extend_skip = [".md", ".json", ".toml"]

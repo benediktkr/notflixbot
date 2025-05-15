@@ -19,7 +19,9 @@ RUN useradd -m -u ${BUILD_UID} -s /bin/bash builder && \
         chown builder:builder /builder
 USER builder
 
-RUN python3 -m pip install poetry
+RUN set -x && \
+    python3 -m pip install poetry && \
+    poetry self add poetry-plugin-export
 
 COPY pyproject.toml /builder
 COPY poetry.lock /builder
