@@ -1,13 +1,13 @@
 # `notflixbot`
 
 [![Build Status](https://jenkins.sudo.is/buildStatus/icon?job=ben%2Fnotflixbot%2Fmain&style=flat-square)](https://jenkins.sudo.is/job/ben/job/notflixbot/job/main/)
-<!-- ![Docker Image Size](https://git.sudo.is/shieldsio/docker/image-size/benediktkr/notflixbot?sort=date&style=flat-square) -->
 [![git](https://www.sudo.is/readmes/git.sudo.is-ben.svg)](https://git.sudo.is/ben/notflixbot)
 [![github](https://www.sudo.is/readmes/github-benediktkr.svg)](https://github.com/benediktkr/notflixbot)
 [![codeberg](https://www.sudo.is/readmes/codeberg.svg)](https://codeberg.org/benk/notflixbot)
 [![BSD-2-Clause](https://www.sudo.is/readmes/license-BSD-blue.svg)](LICENSE.txt)
 [![docs](https://www.sudo.is/readmes/docs.svg)](https://www.sudo.is/docs)
 [![matrix](https://www.sudo.is/readmes/matrix-ben-sudo.is.svg)](https://matrix.to/#/@ben:sudo.is)
+<!-- ![Docker Image Size](https://git.sudo.is/shieldsio/docker/image-size/benediktkr/notflixbot?sort=date&style=flat-square) -->
 
 ![](neo.jpeg)
 
